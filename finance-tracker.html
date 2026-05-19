@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Финансы</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent:    #007AFF;
+      --income:    #34C759;
+      --expense:   #FF3B30;
+      --bg:        #fafafa;
+      --card:      #ffffff;
+      --text:      #1d1d1f;
+      --secondary: #86868b;
+      --border:    rgba(0,0,0,0.09);
+      --shadow:    0 2px 8px rgba(0,0,0,0.06);
+      --radius:    14px;
+      --font:      -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* ── Auth overlay ── */
+    #auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .auth-card {
+      background: var(--card);
+      border-radius: 20px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.05);
+      width: 100%;
+      max-width: 380px;
+      overflow: hidden;
+    }
+
+    .auth-top {
+      padding: 32px 28px 0;
+      text-align: center;
+    }
+
+    .auth-wordmark {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      color: var(--text);
+    }
+
+    .auth-sub {
+      font-size: 13px;
+      color: var(--secondary);
+      margin-top: 4px;
+      margin-bottom: 20px;
+    }
+
+    .auth-tabs {
+      display: flex;
+      margin: 0 28px;
+      background: rgba(0,0,0,0.05);
+      border-radius: 9px;
+      padding: 3px;
+      gap: 2px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--secondary);
+      padding: 7px 12px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .auth-tab.on {
+      background: var(--card);
+      color: var(--text);
+      font-weight: 600;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+
+    .auth-form {
+      padding: 20px 28px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+    }
+
+    .auth-field { display: flex; flex-direction: column; gap: 5px; }
+
+    .auth-field label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .auth-field input {
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 10px 13px;
+      font-family: var(--font);
+      font-size: 15px;
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .auth-field input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,122,255,0.12);
+    }
+
+    .auth-submit {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 12px;
+      font-family: var(--font);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      margin-top: 3px;
+    }
+
+    .auth-submit:hover  { opacity: 0.88; }
+    .auth-submit:active { opacity: 0.72; }
+    .auth-submit:disabled { opacity: 0.5; cursor: wait; }
+
+    .auth-error {
+      font-size: 13px;
+      color: var(--expense);
+      text-align: center;
+      min-height: 18px;
+    }
+
+    /* ── Top bar ── */
+    .topbar {
+      background: rgba(250,250,250,0.85);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 0 24px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .topbar-title {
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      flex-shrink: 0;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .topbar-count {
+      font-size: 13px;
+      color: var(--secondary);
+    }
+
+    .api-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.04em;
+      flex-shrink: 0;
+    }
+
+    .api-badge.online  { background: rgba(52,199,89,0.12);  color: #248a3d; }
+    .api-badge.offline { background: rgba(134,134,139,0.1); color: var(--secondary); }
+
+    .user-chip {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 140px;
+    }
+
+    .logout-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 4px 10px;
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--secondary);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+
+    .logout-btn:hover { color: var(--expense); border-color: var(--expense); }
+
+    /* ── Layout ── */
+    .layout {
+      display: grid;
+      grid-template-columns: 480px 1fr;
+      gap: 20px;
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 20px 20px 80px;
+      align-items: start;
+    }
+
+    .left-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      position: sticky;
+      top: 72px;
+      max-height: calc(100vh - 92px);
+      overflow-y: auto;
+      padding-bottom: 4px;
+    }
+
+    .left-panel::-webkit-scrollbar { width: 4px; }
+    .left-panel::-webkit-scrollbar-track { background: transparent; }
+    .left-panel::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 4px; }
+
+    .right-panel { display: flex; flex-direction: column; gap: 14px; }
+
+    /* ── Card ── */
+    .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); }
+
+    .card-header {
+      padding: 16px 20px 0;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* ── Hero ── */
+    .hero { padding: 28px 24px 20px; text-align: center; }
+
+    .hero-label { font-size: 13px; font-weight: 500; color: var(--secondary); margin-bottom: 6px; }
+
+    .hero-balance {
+      font-size: 54px;
+      font-weight: 200;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      margin-bottom: 22px;
+      color: var(--text);
+      transition: color 0.2s;
+    }
+
+    .hero-balance.neg { color: var(--expense); }
+
+    .hero-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .hero-card { border-radius: 10px; padding: 12px 14px; text-align: left; }
+    .hero-card.inc { background: rgba(52,199,89,0.08); }
+    .hero-card.exp { background: rgba(255,59,48,0.08);  }
+
+    .hero-card-lbl {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 3px;
+    }
+
+    .hero-card.inc .hero-card-lbl { color: var(--income);  }
+    .hero-card.exp .hero-card-lbl { color: var(--expense); }
+
+    .hero-card-val { font-size: 19px; font-weight: 600; letter-spacing: -0.02em; }
+    .hero-card.inc .hero-card-val { color: var(--income);  }
+    .hero-card.exp .hero-card-val { color: var(--expense); }
+
+    /* ── Form ── */
+    .form-body { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 14px 16px 16px; }
+
+    .f-field { display: flex; flex-direction: column; gap: 4px; }
+
+    .f-field label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .f-field input,
+    .f-field select {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-family: var(--font);
+      font-size: 14px;
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+      width: 100%;
+      transition: border-color 0.15s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .f-field input:focus,
+    .f-field select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,122,255,0.12); }
+
+    .f-field select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2386868b' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; padding-right: 28px; }
+
+    .f-field-span2 { grid-column: span 2; }
+
+    .type-toggle { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; height: 34px; }
+
+    .type-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--secondary);
+      transition: all 0.15s;
+    }
+
+    .type-btn.on-exp { background: var(--expense); color: #fff; }
+    .type-btn.on-inc { background: var(--income);  color: #fff; }
+
+    .btn-add {
+      grid-column: span 3;
+      height: 36px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 9px;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      margin-top: 2px;
+    }
+
+    .btn-add:hover  { opacity: 0.85; }
+    .btn-add:active { opacity: 0.7;  }
+
+    /* ── Filters ── */
+    .filters-body { padding: 12px 16px 16px; display: flex; flex-direction: column; gap: 12px; }
+
+    .filter-row { display: flex; flex-direction: column; gap: 6px; }
+
+    .filter-lbl {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .pills { display: flex; gap: 5px; flex-wrap: wrap; }
+
+    .pill {
+      padding: 4px 11px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.12s;
+      white-space: nowrap;
+    }
+
+    .pill:hover { border-color: var(--accent); color: var(--accent); }
+    .pill.on    { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    .flt-select,
+    .flt-search {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-family: var(--font);
+      font-size: 13px;
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+      width: 100%;
+      transition: border-color 0.15s;
+    }
+
+    .flt-select { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2386868b' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; padding-right: 28px; }
+    .flt-select:focus, .flt-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,122,255,0.12); }
+
+    /* ── Breakdown ── */
+    .breakdown-body { padding: 14px 20px 18px; display: flex; flex-direction: column; gap: 14px; }
+
+    .bd-item { display: flex; flex-direction: column; gap: 6px; }
+
+    .bd-row { display: flex; justify-content: space-between; align-items: center; }
+
+    .bd-name {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .bd-icon { width: 26px; height: 26px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .bd-icon.exp { background: rgba(255,59,48,0.09); color: var(--expense); }
+    .bd-icon.inc { background: rgba(52,199,89,0.09);  color: var(--income);  }
+    .bd-icon svg { width: 13px; height: 13px; }
+
+    .bd-right { display: flex; align-items: center; gap: 8px; }
+
+    .bd-pct { font-size: 11px; color: var(--secondary); min-width: 30px; text-align: right; }
+
+    .bd-amount { font-size: 14px; font-weight: 600; min-width: 80px; text-align: right; letter-spacing: -0.01em; }
+
+    .bar-track { height: 5px; background: rgba(0,0,0,0.06); border-radius: 3px; overflow: hidden; }
+
+    .bar-fill { height: 100%; border-radius: 3px; background: var(--expense); transition: width 0.35s cubic-bezier(.4,0,.2,1); }
+    .bar-fill.inc { background: var(--income); }
+
+    /* ── Transaction list ── */
+    .tx-list { display: flex; flex-direction: column; }
+
+    .tx-item {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 11px 16px;
+      border-bottom: 1px solid rgba(0,0,0,0.04);
+      position: relative;
+      cursor: default;
+    }
+
+    .tx-item:last-child { border-bottom: none; }
+    .tx-item:hover { background: rgba(0,0,0,0.015); }
+
+    .tx-ico { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .tx-ico.exp { background: rgba(255,59,48,0.09); color: var(--expense); }
+    .tx-ico.inc { background: rgba(52,199,89,0.09);  color: var(--income);  }
+    .tx-ico svg { width: 15px; height: 15px; }
+
+    .tx-info { flex: 1; min-width: 0; }
+
+    .tx-cat { font-size: 14px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .tx-meta { font-size: 12px; color: var(--secondary); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .tx-right { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; flex-shrink: 0; }
+
+    .tx-amt { font-size: 15px; font-weight: 600; letter-spacing: -0.02em; }
+    .tx-amt.inc { color: var(--income);  }
+    .tx-amt.exp { color: var(--expense); }
+
+    .tx-date { font-size: 11px; color: var(--secondary); }
+
+    .tx-del {
+      display: none;
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--expense);
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      padding: 4px 10px;
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .tx-item:hover .tx-del   { display: block; }
+    .tx-item:hover .tx-right { visibility: hidden; }
+
+    /* ── Empty state ── */
+    .empty { text-align: center; padding: 44px 24px; color: var(--secondary); font-size: 14px; }
+
+    /* ── Export button ── */
+    .export-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 7px 13px;
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--secondary);
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s;
+      z-index: 200;
+    }
+
+    .export-btn:hover { color: var(--accent); border-color: var(--accent); }
+    .export-btn svg   { width: 13px; height: 13px; }
+
+    /* ── Mobile ── */
+    @media (max-width: 800px) {
+      .topbar { padding: 0 16px; }
+
+      .layout {
+        grid-template-columns: 1fr;
+        padding: 14px 14px 80px;
+        gap: 14px;
+      }
+
+      .left-panel { position: static; max-height: none; overflow: visible; }
+
+      .hero-balance { font-size: 42px; }
+
+      .form-body { grid-template-columns: 1fr 1fr; }
+      .btn-add   { grid-column: span 2; }
+
+      .export-btn { bottom: 14px; right: 14px; }
+
+      .user-chip { max-width: 80px; }
+    }
+
+    @media (max-width: 480px) {
+      .form-body  { grid-template-columns: 1fr; }
+      .f-field-span2 { grid-column: span 1; }
+      .btn-add       { grid-column: span 1; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--  AUTH OVERLAY                               -->
+<!-- ═══════════════════════════════════════════ -->
+<div id="auth-overlay">
+  <div class="auth-card">
+    <div class="auth-top">
+      <div class="auth-wordmark">Финансы</div>
+      <p class="auth-sub">Личный финансовый трекер</p>
+
+      <div class="auth-tabs">
+        <button class="auth-tab on" id="tab-login"  onclick="switchAuthTab('login')">Войти</button>
+        <button class="auth-tab"   id="tab-reg"     onclick="switchAuthTab('register')">Регистрация</button>
+      </div>
+    </div>
+    <div class="auth-form" id="auth-form-body"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--  MAIN APP                                   -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="topbar">
+  <span class="topbar-title">Финансы</span>
+  <div class="topbar-right">
+    <span class="topbar-count" id="tx-count"></span>
+    <span class="api-badge"    id="api-badge" style="display:none;"></span>
+    <span class="user-chip"    id="user-chip" style="display:none;"></span>
+    <button class="logout-btn" id="logout-btn" onclick="logout()" style="display:none;">Выйти</button>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="left-panel">
+    <div class="card" id="hero-card"></div>
+
+    <div class="card">
+      <div class="card-header">Добавить операцию</div>
+      <div class="form-body" id="form-body"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Фильтры</div>
+      <div class="filters-body" id="filters-body"></div>
+    </div>
+  </aside>
+
+  <main class="right-panel">
+    <div class="card">
+      <div class="card-header">По категориям</div>
+      <div class="breakdown-body" id="breakdown-body"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Операции</div>
+      <div class="tx-list" id="tx-list"></div>
+    </div>
+  </main>
+</div>
+
+<button class="export-btn" onclick="exportJSON()">
+  <i data-lucide="download"></i>
+  Экспорт
+</button>
+
+<script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════
+//  CONSTANTS
+// ═══════════════════════════════════════════════════════════
+const API_BASE  = 'http://127.0.0.1:8000';
+const API_TIMEOUT = 4000; // ms before falling back to localStorage
+
+const EXP_CATS = ['Продукты','Машина','Квартира','Кафе и рестораны','Развлечения','Одежда','Здоровье','Прочее'];
+const INC_CATS = ['Зарплата','Подработка','Прочее'];
+
+const ICONS = {
+  'Продукты':         'shopping-cart',
+  'Машина':           'car',
+  'Квартира':         'home',
+  'Кафе и рестораны': 'utensils',
+  'Развлечения':      'gamepad-2',
+  'Одежда':           'shirt',
+  'Здоровье':         'heart-pulse',
+  'Зарплата':         'briefcase',
+  'Подработка':       'laptop',
+  'Прочее':           'circle-dot',
+};
+
+// ═══════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════
+let currentUser = null;   // { username, token }
+let apiMode     = false;  // true when API responded successfully
+
+let txns    = [];
+let filters = { type: 'all', category: '', period: 'month', search: '' };
+let formType = 'expense';
+
+// API category cache
+let apiCats     = [];  // [{ id, name, type }]
+let catIdToName = {};  // id  → name
+let catNameToId = {};  // "type:name" → id
+
+// ═══════════════════════════════════════════════════════════
+//  API HELPERS
+// ═══════════════════════════════════════════════════════════
+function authHeaders(json = true) {
+  const h = {};
+  if (currentUser?.token) h['Authorization'] = `Bearer ${currentUser.token}`;
+  if (json) h['Content-Type'] = 'application/json';
+  return h;
+}
+
+async function apiFetch(path, opts = {}, timeoutMs = API_TIMEOUT) {
+  const ctrl  = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const resp = await fetch(API_BASE + path, { ...opts, signal: ctrl.signal });
+    clearTimeout(timer);
+    return resp;
+  } catch (e) {
+    clearTimeout(timer);
+    throw e;
+  }
+}
+
+async function probeApi() {
+  try {
+    const r = await apiFetch('/health', {}, 2500);
+    return r.ok;
+  } catch { return false; }
+}
+
+function setApiMode(on) {
+  apiMode = on;
+  const badge = document.getElementById('api-badge');
+  if (badge) {
+    badge.style.display = '';
+    badge.className     = 'api-badge ' + (on ? 'online' : 'offline');
+    badge.textContent   = on ? 'API' : 'Офлайн';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CRYPTO — client-side password hashing (for local auth)
+// ═══════════════════════════════════════════════════════════
+async function hashPwd(pwd) {
+  const buf  = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pwd));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  LOCAL STORAGE HELPERS
+// ═══════════════════════════════════════════════════════════
+function lsGet(k)    { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } }
+function lsSet(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+
+function loadLocalData() {
+  txns = lsGet(`fin_txns_${currentUser.username}`) || [];
+}
+
+function saveLocalData() {
+  lsSet(`fin_txns_${currentUser.username}`, txns);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  API CATEGORY MANAGEMENT
+// ═══════════════════════════════════════════════════════════
+async function loadApiCategories() {
+  try {
+    const r = await apiFetch('/categories/', { headers: authHeaders(false) });
+    if (!r.ok) return;
+    apiCats     = await r.json();
+    catIdToName = {};
+    catNameToId = {};
+    apiCats.forEach(c => {
+      catIdToName[c.id]                  = c.name;
+      catNameToId[`${c.type}:${c.name}`] = c.id;
+    });
+  } catch { /* ignore — will work without category_id */ }
+}
+
+async function getOrCreateCategory(name, type) {
+  const key = `${type}:${name}`;
+  if (catNameToId[key]) return catNameToId[key];
+  try {
+    const r = await apiFetch('/categories/', {
+      method:  'POST',
+      headers: authHeaders(),
+      body:    JSON.stringify({ name, type }),
+    });
+    if (r.ok) {
+      const cat = await r.json();
+      catIdToName[cat.id] = cat.name;
+      catNameToId[key]    = cat.id;
+      return cat.id;
+    }
+  } catch { /* ignore */ }
+  return null;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  API TRANSACTION HELPERS
+// ═══════════════════════════════════════════════════════════
+function apiTxToLocal(tx) {
+  return {
+    id:       String(tx.id),
+    type:     tx.type,
+    amount:   Math.round(parseFloat(tx.amount)),
+    category: catIdToName[tx.category_id] || 'Прочее',
+    date:     tx.date,
+    comment:  tx.description || '',
+  };
+}
+
+async function loadApiTransactions() {
+  try {
+    const r = await apiFetch('/transactions/?limit=500', { headers: authHeaders(false) });
+    if (!r.ok) return;
+    const data = await r.json();
+    txns = data.map(apiTxToLocal);
+    saveLocalData(); // keep local cache in sync
+  } catch {
+    // API failed mid-session — fall back to cached local data
+    loadLocalData();
+    setApiMode(false);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  AUTH — SCREEN LOGIC
+// ═══════════════════════════════════════════════════════════
+let authTab = 'login';
+
+function switchAuthTab(tab) {
+  authTab = tab;
+  document.getElementById('tab-login').classList.toggle('on', tab === 'login');
+  document.getElementById('tab-reg').classList.toggle('on',   tab === 'register');
+  renderAuthForm();
+}
+
+function renderAuthForm(errorMsg = '') {
+  const isReg = authTab === 'register';
+  document.getElementById('auth-form-body').innerHTML = `
+    <div class="auth-field">
+      <label>Имя пользователя</label>
+      <input id="au" type="text" autocomplete="username" placeholder="username" spellcheck="false" />
+    </div>
+    ${isReg ? `
+    <div class="auth-field">
+      <label>Email</label>
+      <input id="ae" type="email" autocomplete="email" placeholder="user@example.com" />
+    </div>` : ''}
+    <div class="auth-field">
+      <label>Пароль</label>
+      <input id="ap" type="password" autocomplete="${isReg ? 'new-password' : 'current-password'}" placeholder="••••••••" />
+    </div>
+    ${isReg ? `
+    <div class="auth-field">
+      <label>Повторите пароль</label>
+      <input id="ap2" type="password" autocomplete="new-password" placeholder="••••••••" />
+    </div>` : ''}
+    <p class="auth-error" id="auth-err">${esc(errorMsg)}</p>
+    <button class="auth-submit" id="auth-submit-btn" onclick="submitAuth()">
+      ${isReg ? 'Зарегистрироваться' : 'Войти'}
+    </button>`;
+
+  // Enter key submits
+  ['au','ae','ap','ap2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') submitAuth(); });
+  });
+
+  setTimeout(() => document.getElementById('au')?.focus(), 50);
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-err');
+  if (el) el.textContent = msg;
+}
+
+async function submitAuth() {
+  const btn  = document.getElementById('auth-submit-btn');
+  const username = (document.getElementById('au')?.value || '').trim();
+  const password = document.getElementById('ap')?.value || '';
+  const email    = document.getElementById('ae')?.value || '';
+  const pwd2     = document.getElementById('ap2')?.value || '';
+
+  if (!username) { showAuthError('Введите имя пользователя'); return; }
+  if (!password)  { showAuthError('Введите пароль');          return; }
+
+  if (authTab === 'register') {
+    if (password !== pwd2) { showAuthError('Пароли не совпадают'); return; }
+    if (password.length < 8) { showAuthError('Пароль должен быть не менее 8 символов'); return; }
+  }
+
+  btn.disabled    = true;
+  btn.textContent = 'Подождите…';
+
+  try {
+    if (authTab === 'login')    await doLogin(username, password);
+    else                        await doRegister(username, email, password);
+  } catch (e) {
+    showAuthError(e.message || 'Ошибка');
+    btn.disabled    = false;
+    btn.textContent = authTab === 'login' ? 'Войти' : 'Зарегистрироваться';
+  }
+}
+
+async function doLogin(username, password) {
+  // 1. Try API login
+  const apiOk = await probeApi();
+  if (apiOk) {
+    try {
+      const params = new URLSearchParams({ username, password });
+      const r = await apiFetch('/auth/login', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body:    params.toString(),
+      });
+      if (r.ok) {
+        const { access_token } = await r.json();
+        await initSession(username, access_token, true);
+        return;
+      }
+      if (r.status === 401 || r.status === 403) {
+        const d = await r.json().catch(() => ({}));
+        throw new Error(d.detail || 'Неверный логин или пароль');
+      }
+    } catch (e) {
+      if (e.message && !e.message.includes('fetch') && !e.message.includes('abort')) throw e;
+      // network error → fall through to local auth
+    }
+  }
+
+  // 2. Local auth fallback
+  const users = lsGet('fin_users') || {};
+  const stored = users[username];
+  if (!stored) throw new Error('Пользователь не найден. Зарегистрируйтесь.');
+  const hash = await hashPwd(password);
+  if (hash !== stored.passwordHash) throw new Error('Неверный пароль');
+  await initSession(username, null, false);
+}
+
+async function doRegister(username, email, password) {
+  // Validate username format
+  if (!/^[a-zA-Z0-9_\-]{3,50}$/.test(username)) {
+    throw new Error('Имя пользователя: 3–50 символов, только буквы, цифры, _ и -');
+  }
+
+  // 1. Try API registration
+  const apiOk = await probeApi();
+  if (apiOk) {
+    try {
+      const r = await apiFetch('/auth/register', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ username, email: email || `${username}@local.app`, password }),
+      });
+      if (r.ok) {
+        // Register succeeded → now login via API
+        const params = new URLSearchParams({ username, password });
+        const r2 = await apiFetch('/auth/login', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body:    params.toString(),
+        });
+        if (r2.ok) {
+          const { access_token } = await r2.json();
+          await initSession(username, access_token, true);
+          return;
+        }
+      } else {
+        const d = await r.json().catch(() => ({}));
+        throw new Error(d.detail || 'Ошибка регистрации');
+      }
+    } catch (e) {
+      if (e.message && !e.message.includes('fetch') && !e.message.includes('abort')) throw e;
+      // network error → fall through to local registration
+    }
+  }
+
+  // 2. Local registration fallback
+  const users = lsGet('fin_users') || {};
+  if (users[username]) throw new Error('Имя пользователя уже занято');
+  const hash = await hashPwd(password);
+  users[username] = { passwordHash: hash };
+  lsSet('fin_users', users);
+  await initSession(username, null, false);
+}
+
+async function initSession(username, token, useApi) {
+  currentUser = { username, token };
+  lsSet('fin_session', { username, token });
+
+  if (useApi && token) {
+    setApiMode(true);
+    await loadApiCategories();
+    await loadApiTransactions();
+  } else {
+    setApiMode(false);
+    loadLocalData();
+  }
+
+  showMainApp(username);
+}
+
+function logout() {
+  lsSet('fin_session', null);
+  currentUser = null;
+  txns        = [];
+  apiCats     = [];
+  catIdToName = {};
+  catNameToId = {};
+  setApiMode(false);
+  showAuthScreen();
+}
+
+function showAuthScreen() {
+  document.getElementById('auth-overlay').style.display = 'flex';
+  document.getElementById('api-badge').style.display    = 'none';
+  document.getElementById('user-chip').style.display    = 'none';
+  document.getElementById('logout-btn').style.display   = 'none';
+  renderAuthForm();
+  lucide.createIcons();
+}
+
+function showMainApp(username) {
+  document.getElementById('auth-overlay').style.display = 'none';
+
+  const chip = document.getElementById('user-chip');
+  chip.textContent   = username;
+  chip.style.display = '';
+
+  document.getElementById('logout-btn').style.display = '';
+
+  renderForm();
+  renderFilters();
+  renderAll();
+  lucide.createIcons();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════════════
+function uid() {
+  return typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+function fmtNum(n) {
+  return Math.abs(n).toLocaleString('ru-RU', { maximumFractionDigits: 0 }) + ' ₽';
+}
+
+function fmtDate(s) {
+  return new Date(s + 'T00:00:00').toLocaleDateString('ru-RU', { day:'numeric', month:'short' });
+}
+
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+
+function inPeriod(dateStr, period) {
+  if (period === 'all') return true;
+  const d   = new Date(dateStr + 'T00:00:00');
+  const now = new Date();
+  if (period === 'week') {
+    const s = new Date(now); s.setDate(now.getDate() - 7); s.setHours(0,0,0,0);
+    return d >= s;
+  }
+  if (period === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  if (period === 'year')  return d.getFullYear() === now.getFullYear();
+  return true;
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  FILTERING
+// ═══════════════════════════════════════════════════════════
+function getFiltered() {
+  return txns.filter(tx => {
+    if (filters.type !== 'all' && tx.type !== filters.type) return false;
+    if (filters.category && tx.category !== filters.category) return false;
+    if (!inPeriod(tx.date, filters.period)) return false;
+    if (filters.search) {
+      const q = filters.search.toLowerCase();
+      if (!tx.category.toLowerCase().includes(q) && !(tx.comment||'').toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function calcSummary(arr) {
+  let income = 0, expenses = 0;
+  arr.forEach(tx => { if (tx.type === 'income') income += tx.amount; else expenses += tx.amount; });
+  return { income, expenses, balance: income - expenses };
+}
+
+function calcBreakdown(arr) {
+  const expTotal = arr.filter(t => t.type === 'expense').reduce((s,t) => s + t.amount, 0);
+  const incTotal = arr.filter(t => t.type === 'income' ).reduce((s,t) => s + t.amount, 0);
+  const map = {};
+  arr.forEach(tx => {
+    const k = tx.type + ':' + tx.category;
+    if (!map[k]) map[k] = { category: tx.category, type: tx.type, total: 0 };
+    map[k].total += tx.amount;
+  });
+  return Object.values(map)
+    .sort((a,b) => b.total - a.total)
+    .map(item => {
+      const typeTotal = item.type === 'expense' ? expTotal : incTotal;
+      return { ...item, pct: typeTotal > 0 ? Math.round(item.total / typeTotal * 100) : 0 };
+    });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RENDER — HERO
+// ═══════════════════════════════════════════════════════════
+function renderHero(s) {
+  const neg = s.balance < 0;
+  document.getElementById('hero-card').innerHTML = `
+    <div class="hero">
+      <p class="hero-label">Баланс</p>
+      <p class="hero-balance${neg?' neg':''}">${neg?'−':''}${fmtNum(s.balance)}</p>
+      <div class="hero-row">
+        <div class="hero-card inc">
+          <p class="hero-card-lbl">Доходы</p>
+          <p class="hero-card-val">+${fmtNum(s.income)}</p>
+        </div>
+        <div class="hero-card exp">
+          <p class="hero-card-lbl">Расходы</p>
+          <p class="hero-card-val">−${fmtNum(s.expenses)}</p>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RENDER — FORM
+// ═══════════════════════════════════════════════════════════
+function renderForm() {
+  const cats = formType === 'income' ? INC_CATS : EXP_CATS;
+  document.getElementById('form-body').innerHTML = `
+    <div class="f-field">
+      <label>Тип</label>
+      <div class="type-toggle">
+        <button class="type-btn ${formType==='expense'?'on-exp':''}" onclick="setFormType('expense')">Расход</button>
+        <button class="type-btn ${formType==='income' ?'on-inc':''}" onclick="setFormType('income')">Доход</button>
+      </div>
+    </div>
+    <div class="f-field">
+      <label>Сумма, ₽</label>
+      <input id="f-amount" type="number" inputmode="numeric" placeholder="0" min="1" step="1" />
+    </div>
+    <div class="f-field">
+      <label>Категория</label>
+      <select id="f-cat">
+        ${cats.map(c=>`<option>${esc(c)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="f-field">
+      <label>Дата</label>
+      <input id="f-date" type="date" value="${todayStr()}" max="${todayStr()}" />
+    </div>
+    <div class="f-field f-field-span2">
+      <label>Комментарий</label>
+      <input id="f-comment" type="text" placeholder="Необязательно" />
+    </div>
+    <button class="btn-add" onclick="addTx()">Добавить</button>`;
+
+  document.getElementById('f-amount').addEventListener('keydown',  e => { if (e.key === 'Enter') addTx(); });
+  document.getElementById('f-comment').addEventListener('keydown', e => { if (e.key === 'Enter') addTx(); });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RENDER — FILTERS
+// ═══════════════════════════════════════════════════════════
+function renderFilters() {
+  const periods = [['week','Неделя'],['month','Месяц'],['year','Год'],['all','Всё время']];
+  const types   = [['all','Все'],['expense','Расходы'],['income','Доходы']];
+  const allCats = [...new Set([...EXP_CATS, ...INC_CATS])];
+
+  document.getElementById('filters-body').innerHTML = `
+    <div class="filter-row">
+      <p class="filter-lbl">Период</p>
+      <div class="pills">
+        ${periods.map(([v,l])=>`<button class="pill${filters.period===v?' on':''}" onclick="setFilter('period','${v}')">${l}</button>`).join('')}
+      </div>
+    </div>
+    <div class="filter-row">
+      <p class="filter-lbl">Тип</p>
+      <div class="pills">
+        ${types.map(([v,l])=>`<button class="pill${filters.type===v?' on':''}" onclick="setFilter('type','${v}')">${l}</button>`).join('')}
+      </div>
+    </div>
+    <div class="filter-row">
+      <p class="filter-lbl">Категория</p>
+      <select class="flt-select" onchange="setFilter('category',this.value)">
+        <option value="">Все категории</option>
+        ${allCats.map(c=>`<option value="${esc(c)}"${filters.category===c?' selected':''}>${esc(c)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="filter-row">
+      <p class="filter-lbl">Поиск</p>
+      <input class="flt-search" type="text" placeholder="По категории или комментарию…"
+        value="${esc(filters.search)}" oninput="setFilter('search',this.value,true)" />
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RENDER — BREAKDOWN
+// ═══════════════════════════════════════════════════════════
+function renderBreakdown(items) {
+  const el = document.getElementById('breakdown-body');
+  if (items.length === 0) {
+    el.innerHTML = `<div class="empty">Нет данных для выбранного периода</div>`;
+    return;
+  }
+  el.innerHTML = items.map(item => {
+    const icon = ICONS[item.category] || 'circle-dot';
+    const cls  = item.type === 'income' ? 'inc' : 'exp';
+    return `
+      <div class="bd-item">
+        <div class="bd-row">
+          <span class="bd-name">
+            <span class="bd-icon ${cls}"><i data-lucide="${icon}"></i></span>
+            ${esc(item.category)}
+          </span>
+          <span class="bd-right">
+            <span class="bd-pct">${item.pct}%</span>
+            <span class="bd-amount">${fmtNum(item.total)}</span>
+          </span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill${item.type==='income'?' inc':''}" style="width:${item.pct}%"></div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RENDER — TRANSACTION LIST
+// ═══════════════════════════════════════════════════════════
+function renderList(arr) {
+  const el     = document.getElementById('tx-list');
+  const sorted = [...arr].sort((a,b) => b.date.localeCompare(a.date) || String(b.id).localeCompare(String(a.id)));
+
+  if (sorted.length === 0) {
+    el.innerHTML = `<div class="empty">Операций не найдено</div>`;
+    return;
+  }
+
+  el.innerHTML = sorted.map(tx => {
+    const icon = ICONS[tx.category] || 'circle-dot';
+    const cls  = tx.type === 'income' ? 'inc' : 'exp';
+    const sign = tx.type === 'income' ? '+' : '−';
+    const meta = tx.comment ? `${esc(tx.comment)} · ${fmtDate(tx.date)}` : fmtDate(tx.date);
+    return `
+      <div class="tx-item">
+        <div class="tx-ico ${cls}"><i data-lucide="${icon}"></i></div>
+        <div class="tx-info">
+          <p class="tx-cat">${esc(tx.category)}</p>
+          <p class="tx-meta">${meta}</p>
+        </div>
+        <div class="tx-right">
+          <p class="tx-amt ${cls}">${sign}${fmtNum(tx.amount)}</p>
+          <p class="tx-date">${fmtDate(tx.date)}</p>
+        </div>
+        <button class="tx-del" onclick="deleteTx('${esc(String(tx.id))}')">Удалить</button>
+      </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RENDER ALL
+// ═══════════════════════════════════════════════════════════
+function renderAll() {
+  const filtered = getFiltered();
+  const summary  = calcSummary(filtered);
+  const bdwn     = calcBreakdown(filtered);
+
+  renderHero(summary);
+  renderBreakdown(bdwn);
+  renderList(filtered);
+
+  document.getElementById('tx-count').textContent =
+    txns.length > 0 ? txns.length + ' операций' : '';
+
+  lucide.createIcons();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  ACTIONS
+// ═══════════════════════════════════════════════════════════
+function setFormType(type) {
+  formType = type;
+  renderForm();
+  lucide.createIcons();
+}
+
+function setFilter(key, value, noRerenderFilters) {
+  filters[key] = value;
+  renderAll();
+  if (!noRerenderFilters) {
+    renderFilters();
+    lucide.createIcons();
+  }
+}
+
+async function addTx() {
+  const amtEl  = document.getElementById('f-amount');
+  const amount = parseFloat(amtEl.value);
+  if (!amount || amount <= 0) {
+    amtEl.focus();
+    amtEl.style.borderColor = 'var(--expense)';
+    setTimeout(() => amtEl.style.borderColor = '', 1200);
+    return;
+  }
+
+  const tx = {
+    id:       uid(),
+    type:     formType,
+    amount:   Math.round(amount),
+    category: document.getElementById('f-cat').value,
+    date:     document.getElementById('f-date').value || todayStr(),
+    comment:  document.getElementById('f-comment').value.trim(),
+  };
+
+  if (apiMode) {
+    try {
+      const catId = await getOrCreateCategory(tx.category, tx.type);
+      const r = await apiFetch('/transactions/', {
+        method:  'POST',
+        headers: authHeaders(),
+        body:    JSON.stringify({
+          type:        tx.type,
+          amount:      tx.amount,
+          category_id: catId || undefined,
+          description: tx.comment || null,
+          date:        tx.date,
+        }),
+      });
+      if (r.ok) {
+        const data = await r.json();
+        tx.id = String(data.id); // use API-assigned id
+      } else {
+        setApiMode(false); // API rejected → switch to local
+      }
+    } catch {
+      setApiMode(false); // network error → switch to local
+    }
+  }
+
+  txns.push(tx);
+  saveLocalData(); // always keep local cache updated
+
+  renderAll();
+  amtEl.value = '';
+  document.getElementById('f-comment').value = '';
+  amtEl.focus();
+}
+
+async function deleteTx(id) {
+  if (!confirm('Удалить эту операцию?')) return;
+
+  if (apiMode) {
+    try {
+      await apiFetch(`/transactions/${id}`, {
+        method:  'DELETE',
+        headers: authHeaders(false),
+      });
+    } catch {
+      setApiMode(false);
+    }
+  }
+
+  txns = txns.filter(t => String(t.id) !== String(id));
+  saveLocalData();
+  renderAll();
+}
+
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(txns, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = Object.assign(document.createElement('a'), {
+    href:     url,
+    download: `finance-${currentUser?.username || 'export'}-${todayStr()}.json`,
+  });
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+async function init() {
+  const session = lsGet('fin_session');
+
+  if (!session?.username) {
+    // No session — show auth screen
+    showAuthScreen();
+    return;
+  }
+
+  currentUser = { username: session.username, token: session.token || null };
+
+  if (currentUser.token) {
+    // Had an API token — check if API is still reachable
+    const apiUp = await probeApi();
+    if (apiUp) {
+      setApiMode(true);
+      await loadApiCategories();
+      await loadApiTransactions();
+    } else {
+      setApiMode(false);
+      loadLocalData();
+    }
+  } else {
+    setApiMode(false);
+    loadLocalData();
+  }
+
+  showMainApp(currentUser.username);
+}
+
+init();
+</script>
+</body>
+</html>
