@@ -7,7 +7,7 @@ from fastapi.responses import FileResponse
 from app.database import Base, engine
 from app.routers import auth, categories, transactions, users
 
-HTML_FILE = Path(__file__).parent.parent.parent / "finance-tracker.html"
+HTML_FILE = Path(__file__).parent.parent / "finance-tracker.html"
 
 Base.metadata.create_all(bind=engine)
 
