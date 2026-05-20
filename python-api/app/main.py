@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
 from app.database import Base, engine
-from app.routers import auth, categories, transactions, users
+from app.routers import admin, auth, categories, transactions, users
 
 HTML_FILE = Path(__file__).parent.parent / "finance-tracker.html"
 
@@ -21,6 +21,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(admin.router)
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(categories.router)

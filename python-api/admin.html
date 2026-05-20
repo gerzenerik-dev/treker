@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Treker — Администрирование</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: #f5f5f7;
+    color: #1d1d1f;
+    min-height: 100vh;
+    font-size: 14px;
+  }
+
+  /* ── Login ── */
+  #login-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  .login-card {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 30px rgba(0,0,0,.10);
+    padding: 44px 40px 40px;
+    width: 340px;
+  }
+  .login-card h1 {
+    font-size: 22px;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+  .login-card .subtitle {
+    text-align: center;
+    color: #6e6e73;
+    font-size: 13px;
+    margin-bottom: 28px;
+  }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12px; color: #6e6e73; margin-bottom: 5px; font-weight: 500; }
+  .field input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid #d2d2d7;
+    border-radius: 10px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color .15s;
+    background: #fafafa;
+  }
+  .field input:focus { border-color: #0071e3; background: #fff; }
+  .btn-primary {
+    width: 100%;
+    padding: 11px;
+    background: #0071e3;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 6px;
+    transition: background .15s;
+  }
+  .btn-primary:hover { background: #0077ed; }
+  .btn-primary:active { background: #006edc; }
+  .error-msg {
+    color: #ff3b30;
+    font-size: 13px;
+    text-align: center;
+    margin-top: 12px;
+    min-height: 18px;
+  }
+
+  /* ── Dashboard ── */
+  #dashboard { display: none; }
+
+  header {
+    background: rgba(255,255,255,.85);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid #d2d2d7;
+    padding: 0 32px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header .brand { font-size: 17px; font-weight: 600; }
+  header .brand span { color: #0071e3; }
+  .logout-btn {
+    font-size: 13px;
+    color: #0071e3;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 0;
+  }
+  .logout-btn:hover { text-decoration: underline; }
+
+  .main-content { padding: 28px 32px; max-width: 1200px; margin: 0 auto; }
+
+  /* ── Stats ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 20px 22px;
+    box-shadow: 0 1px 6px rgba(0,0,0,.07);
+  }
+  .stat-card .label { font-size: 12px; color: #6e6e73; font-weight: 500; margin-bottom: 6px; }
+  .stat-card .value { font-size: 26px; font-weight: 600; }
+  .stat-card .value.green { color: #34c759; }
+  .stat-card .value.red   { color: #ff3b30; }
+
+  /* ── Section header ── */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .section-header h2 { font-size: 18px; font-weight: 600; }
+  .search-input {
+    padding: 7px 12px;
+    border: 1.5px solid #d2d2d7;
+    border-radius: 8px;
+    font-size: 13px;
+    outline: none;
+    width: 220px;
+    transition: border-color .15s;
+  }
+  .search-input:focus { border-color: #0071e3; }
+
+  /* ── Table ── */
+  .table-wrap {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 1px 6px rgba(0,0,0,.07);
+    overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { background: #f5f5f7; }
+  th {
+    padding: 11px 16px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    color: #6e6e73;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    white-space: nowrap;
+  }
+  tbody tr.user-row {
+    border-top: 1px solid #f0f0f2;
+    cursor: pointer;
+    transition: background .12s;
+  }
+  tbody tr.user-row:hover { background: #f5f5f7; }
+  td {
+    padding: 12px 16px;
+    vertical-align: middle;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge.active   { background: #d1f5da; color: #1a7f37; }
+  .badge.inactive { background: #fde7e7; color: #c0392b; }
+  .amount-pos { color: #34c759; font-weight: 500; }
+  .amount-neg { color: #ff3b30; font-weight: 500; }
+  .expand-icon { color: #6e6e73; font-size: 11px; transition: transform .2s; display: inline-block; }
+  .expanded .expand-icon { transform: rotate(90deg); }
+
+  /* ── Transactions sub-table ── */
+  tr.txn-row { display: none; }
+  tr.txn-row.open { display: table-row; }
+  td.txn-cell {
+    padding: 0;
+    background: #fafafa;
+    border-top: 1px solid #e8e8ed;
+  }
+  .txn-inner { padding: 10px 24px 14px; }
+  .txn-inner table { margin: 0; }
+  .txn-inner thead tr { background: transparent; }
+  .txn-inner th { font-size: 11px; color: #aeaeb2; padding: 6px 10px; }
+  .txn-inner td { padding: 7px 10px; font-size: 13px; border-top: 1px solid #f0f0f2; }
+  .txn-type-income  { color: #34c759; font-weight: 500; }
+  .txn-type-expense { color: #ff3b30; font-weight: 500; }
+  .no-txn { color: #aeaeb2; font-size: 13px; padding: 10px 0; }
+
+  .loading { text-align: center; color: #6e6e73; padding: 40px; }
+</style>
+</head>
+<body>
+
+<!-- ═══ Login ═══ -->
+<div id="login-screen">
+  <div class="login-card">
+    <h1>Treker</h1>
+    <p class="subtitle">Панель администратора</p>
+    <div class="field">
+      <label>Логин</label>
+      <input id="inp-user" type="text" placeholder="admin" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>Пароль</label>
+      <input id="inp-pass" type="password" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" id="btn-login">Войти</button>
+    <p class="error-msg" id="login-error"></p>
+  </div>
+</div>
+
+<!-- ═══ Dashboard ═══ -->
+<div id="dashboard">
+  <header>
+    <span class="brand">Treker <span>Admin</span></span>
+    <button class="logout-btn" id="btn-logout">Выйти</button>
+  </header>
+
+  <div class="main-content">
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="label">Пользователи</div>
+        <div class="value" id="stat-users">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Транзакции</div>
+        <div class="value" id="stat-txns">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Общий баланс</div>
+        <div class="value" id="stat-balance">—</div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <h2>Пользователи</h2>
+      <input class="search-input" id="search" type="text" placeholder="Поиск по имени или email…">
+    </div>
+
+    <div class="table-wrap">
+      <div class="loading" id="tbl-loading">Загрузка…</div>
+      <table id="users-table" style="display:none">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Имя пользователя</th>
+            <th>Email</th>
+            <th>Статус</th>
+            <th>Зарегистрирован</th>
+            <th style="text-align:right">Доходы</th>
+            <th style="text-align:right">Расходы</th>
+            <th style="text-align:right">Баланс</th>
+            <th>Транзакции</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const fmt = n => new Intl.NumberFormat('ru-RU', { style:'currency', currency:'RUB', maximumFractionDigits:0 }).format(n);
+
+let _token = '';
+let _allUsers = [];
+
+// ── Login ──────────────────────────────────────────────────────────────────
+async function login() {
+  const username = document.getElementById('inp-user').value.trim();
+  const password = document.getElementById('inp-pass').value;
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+
+  try {
+    const res = await fetch('/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      errEl.textContent = data.detail || 'Ошибка авторизации';
+      return;
+    }
+    const data = await res.json();
+    _token = data.token;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    loadUsers();
+  } catch {
+    errEl.textContent = 'Ошибка соединения с сервером';
+  }
+}
+
+document.getElementById('btn-login').addEventListener('click', login);
+document.getElementById('inp-pass').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+document.getElementById('inp-user').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+
+document.getElementById('btn-logout').addEventListener('click', () => {
+  _token = '';
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('inp-pass').value = '';
+});
+
+// ── Load users ─────────────────────────────────────────────────────────────
+async function loadUsers() {
+  try {
+    const res = await fetch('/admin/api/users', {
+      headers: { 'Authorization': 'Bearer ' + _token },
+    });
+    if (!res.ok) throw new Error('unauthorized');
+    _allUsers = await res.json();
+    renderStats(_allUsers);
+    renderTable(_allUsers);
+  } catch {
+    document.getElementById('tbl-loading').textContent = 'Ошибка загрузки данных.';
+  }
+}
+
+function renderStats(users) {
+  const totalTxns = users.reduce((s, u) => s + u.transactions.length, 0);
+  const totalBalance = users.reduce((s, u) => s + u.balance, 0);
+
+  document.getElementById('stat-users').textContent = users.length;
+  document.getElementById('stat-txns').textContent = totalTxns;
+
+  const balEl = document.getElementById('stat-balance');
+  balEl.textContent = fmt(totalBalance);
+  balEl.className = 'value ' + (totalBalance >= 0 ? 'green' : 'red');
+}
+
+function renderTable(users) {
+  document.getElementById('tbl-loading').style.display = 'none';
+  const table = document.getElementById('users-table');
+  table.style.display = 'table';
+  const tbody = document.getElementById('users-tbody');
+  tbody.innerHTML = '';
+
+  if (users.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#6e6e73;padding:24px">Пользователи не найдены</td></tr>';
+    return;
+  }
+
+  users.forEach(u => {
+    // User row
+    const tr = document.createElement('tr');
+    tr.className = 'user-row';
+    tr.dataset.id = u.id;
+    tr.innerHTML = `
+      <td>${u.id}</td>
+      <td><strong>${esc(u.username)}</strong></td>
+      <td style="color:#6e6e73">${esc(u.email)}</td>
+      <td><span class="badge ${u.is_active ? 'active' : 'inactive'}">${u.is_active ? 'Активен' : 'Заблокирован'}</span></td>
+      <td style="color:#6e6e73">${u.created_at}</td>
+      <td style="text-align:right" class="amount-pos">+${fmt(u.income)}</td>
+      <td style="text-align:right" class="amount-neg">-${fmt(u.expense)}</td>
+      <td style="text-align:right;font-weight:600" class="${u.balance >= 0 ? 'amount-pos' : 'amount-neg'}">${fmt(u.balance)}</td>
+      <td style="color:#6e6e73">${u.transactions.length}</td>
+      <td><span class="expand-icon">▶</span></td>
+    `;
+
+    // Transactions row
+    const trTxn = document.createElement('tr');
+    trTxn.className = 'txn-row';
+    trTxn.dataset.parent = u.id;
+    const txnHtml = u.transactions.length === 0
+      ? '<p class="no-txn">Нет транзакций</p>'
+      : `<table>
+          <thead><tr>
+            <th>Дата</th><th>Тип</th><th>Сумма</th><th>Категория</th><th>Описание</th>
+          </tr></thead>
+          <tbody>${u.transactions.map(t => `
+            <tr>
+              <td>${t.date}</td>
+              <td class="${t.type === 'income' ? 'txn-type-income' : 'txn-type-expense'}">${t.type === 'income' ? 'Доход' : 'Расход'}</td>
+              <td>${t.type === 'income' ? '+' : '-'}${fmt(t.amount)}</td>
+              <td>${esc(t.category)}</td>
+              <td style="color:#6e6e73">${esc(t.description)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>`;
+    trTxn.innerHTML = `<td class="txn-cell" colspan="10"><div class="txn-inner">${txnHtml}</div></td>`;
+
+    tr.addEventListener('click', () => {
+      const open = trTxn.classList.toggle('open');
+      tr.classList.toggle('expanded', open);
+    });
+
+    tbody.appendChild(tr);
+    tbody.appendChild(trTxn);
+  });
+}
+
+// ── Search ─────────────────────────────────────────────────────────────────
+document.getElementById('search').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  const filtered = _allUsers.filter(u =>
+    u.username.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+  );
+  renderTable(filtered);
+});
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>
