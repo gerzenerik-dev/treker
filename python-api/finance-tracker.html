@@ -756,8 +756,8 @@
   <div class="modal-card">
     <p class="modal-title">Начальный баланс</p>
     <p class="modal-sub">Укажите ваш текущий баланс, чтобы точнее отслеживать финансы.</p>
-    <input id="modal-balance-inp" class="modal-input" type="number" inputmode="decimal"
-           placeholder="0 ₽" min="0" step="1" />
+    <input id="modal-balance-inp" class="modal-input" type="number" inputmode="text"
+           placeholder="0 ₽" step="1" />
     <div class="modal-btns">
       <button class="modal-btn-skip" onclick="closeBalanceModal()">Пропустить</button>
       <button class="modal-btn-save" onclick="saveInitialBalance()">Сохранить</button>
@@ -1512,9 +1512,9 @@ function exportJSON() {
 //  INITIAL BALANCE MODAL
 // ═══════════════════════════════════════════════════════════
 function openBalanceModal() {
-  const existing = txns.find(t => t.category === INIT_BAL_CATEGORY && t.type === 'income');
+  const existing = txns.find(t => t.category === INIT_BAL_CATEGORY);
   const inp = document.getElementById('modal-balance-inp');
-  inp.value = existing ? existing.amount : '';
+  inp.value = existing ? (existing.type === 'expense' ? -existing.amount : existing.amount) : '';
   document.getElementById('init-balance-modal').classList.add('open');
   setTimeout(() => inp.select(), 60);
 }
@@ -1527,28 +1527,31 @@ function closeBalanceModal() {
 async function saveInitialBalance() {
   const inp = document.getElementById('modal-balance-inp');
   const amount = parseFloat(inp.value);
-  if (!amount || amount < 0) {
+  if (isNaN(amount)) {
     inp.style.borderColor = 'var(--expense)';
     inp.focus();
     setTimeout(() => inp.style.borderColor = '', 1200);
     return;
   }
 
-  // Remove any existing initial balance entry
-  const existing = txns.find(t => t.category === INIT_BAL_CATEGORY && t.type === 'income');
+  // Remove any existing initial balance entry (may be income or expense)
+  const existing = txns.find(t => t.category === INIT_BAL_CATEGORY);
   if (existing) {
     if (apiMode) {
       try {
         await apiFetch(`/transactions/${existing.id}`, { method: 'DELETE', headers: authHeaders(false) });
       } catch { setApiMode(false); }
     }
-    txns = txns.filter(t => !(t.category === INIT_BAL_CATEGORY && t.type === 'income'));
+    txns = txns.filter(t => t.category !== INIT_BAL_CATEGORY);
   }
+
+  const txType   = amount >= 0 ? 'income' : 'expense';
+  const txAmount = Math.round(Math.abs(amount));
 
   const tx = {
     id:       uid(),
-    type:     'income',
-    amount:   Math.round(amount),
+    type:     txType,
+    amount:   txAmount,
     category: INIT_BAL_CATEGORY,
     date:     todayStr(),
     comment:  '',
@@ -1556,13 +1559,13 @@ async function saveInitialBalance() {
 
   if (apiMode) {
     try {
-      const catId = await getOrCreateCategory(INIT_BAL_CATEGORY, 'income');
+      const catId = await getOrCreateCategory(INIT_BAL_CATEGORY, txType);
       const r = await apiFetch('/transactions/', {
         method:  'POST',
         headers: authHeaders(),
         body:    JSON.stringify({
-          type:        'income',
-          amount:      tx.amount,
+          type:        txType,
+          amount:      txAmount,
           category_id: catId || undefined,
           description: null,
           date:        tx.date,
