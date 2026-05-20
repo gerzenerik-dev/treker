@@ -506,6 +506,7 @@
     .tx-ico { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .tx-ico.exp { background: rgba(255,59,48,0.09); color: var(--expense); }
     .tx-ico.inc { background: rgba(52,199,89,0.09);  color: var(--income);  }
+    .tx-ico.neu { background: rgba(0,122,255,0.09);  color: var(--accent);  }
     .tx-ico svg { width: 15px; height: 15px; }
 
     .tx-info { flex: 1; min-width: 0; }
@@ -519,6 +520,7 @@
     .tx-amt { font-size: 15px; font-weight: 600; letter-spacing: -0.02em; }
     .tx-amt.inc { color: var(--income);  }
     .tx-amt.exp { color: var(--expense); }
+    .tx-amt.neu { color: var(--accent);  }
 
     .tx-date { font-size: 11px; color: var(--secondary); }
 
@@ -1206,16 +1208,25 @@ function getFiltered() {
 }
 
 function calcSummary(arr) {
-  let income = 0, expenses = 0;
-  arr.forEach(tx => { if (tx.type === 'income') income += tx.amount; else expenses += tx.amount; });
-  return { income, expenses, balance: income - expenses };
+  let income = 0, expenses = 0, initBal = 0;
+  arr.forEach(tx => {
+    if (tx.category === INIT_BAL_CATEGORY) {
+      initBal += tx.type === 'income' ? tx.amount : -tx.amount;
+    } else if (tx.type === 'income') {
+      income += tx.amount;
+    } else {
+      expenses += tx.amount;
+    }
+  });
+  return { income, expenses, balance: income - expenses + initBal };
 }
 
 function calcBreakdown(arr) {
-  const expTotal = arr.filter(t => t.type === 'expense').reduce((s,t) => s + t.amount, 0);
-  const incTotal = arr.filter(t => t.type === 'income' ).reduce((s,t) => s + t.amount, 0);
+  const rows = arr.filter(t => t.category !== INIT_BAL_CATEGORY);
+  const expTotal = rows.filter(t => t.type === 'expense').reduce((s,t) => s + t.amount, 0);
+  const incTotal = rows.filter(t => t.type === 'income' ).reduce((s,t) => s + t.amount, 0);
   const map = {};
-  arr.forEach(tx => {
+  rows.forEach(tx => {
     const k = tx.type + ':' + tx.category;
     if (!map[k]) map[k] = { category: tx.category, type: tx.type, total: 0 };
     map[k].total += tx.amount;
@@ -1369,9 +1380,10 @@ function renderList(arr) {
   }
 
   el.innerHTML = sorted.map(tx => {
-    const icon = ICONS[tx.category] || 'circle-dot';
-    const cls  = tx.type === 'income' ? 'inc' : 'exp';
-    const sign = tx.type === 'income' ? '+' : '−';
+    const isInit = tx.category === INIT_BAL_CATEGORY;
+    const icon = ICONS[tx.category] || (isInit ? 'wallet' : 'circle-dot');
+    const cls  = isInit ? 'neu' : (tx.type === 'income' ? 'inc' : 'exp');
+    const sign = isInit ? '' : (tx.type === 'income' ? '+' : '−');
     const meta = tx.comment ? `${esc(tx.comment)} · ${fmtDate(tx.date)}` : fmtDate(tx.date);
     return `
       <div class="tx-item">
