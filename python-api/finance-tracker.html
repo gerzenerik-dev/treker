@@ -278,17 +278,41 @@
 
     .hero-label { font-size: 13px; font-weight: 500; color: var(--secondary); margin-bottom: 6px; }
 
+    .hero-balance-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 22px;
+    }
+
     .hero-balance {
       font-size: 54px;
       font-weight: 200;
       letter-spacing: -0.03em;
       line-height: 1;
-      margin-bottom: 22px;
       color: var(--text);
       transition: color 0.2s;
     }
 
     .hero-balance.neg { color: var(--expense); }
+
+    .balance-adjust-btn {
+      background: none;
+      border: none;
+      padding: 5px;
+      cursor: pointer;
+      color: var(--secondary);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: color 0.15s, background 0.15s;
+      margin-top: 6px;
+    }
+    .balance-adjust-btn:hover { color: var(--accent); background: rgba(0,122,255,0.08); }
+    .balance-adjust-btn svg   { width: 14px; height: 14px; }
 
     .hero-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
@@ -548,6 +572,94 @@
     .export-btn svg   { width: 13px; height: 13px; }
 
     /* ── Mobile ── */
+    /* ── Initial Balance Modal ── */
+    #init-balance-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.36);
+      z-index: 500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+    #init-balance-modal.open { display: flex; }
+
+    .modal-card {
+      background: var(--card);
+      border-radius: 20px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.18);
+      padding: 32px 28px 28px;
+      width: 100%;
+      max-width: 340px;
+      animation: modalIn 0.2s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.92) translateY(10px); }
+      to   { opacity: 1; transform: scale(1)    translateY(0);    }
+    }
+    .modal-title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+    .modal-sub {
+      font-size: 13px;
+      color: var(--secondary);
+      line-height: 1.5;
+      margin-bottom: 22px;
+    }
+    .modal-input {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      font-family: var(--font);
+      font-size: 28px;
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      text-align: center;
+      outline: none;
+      margin-bottom: 18px;
+      background: var(--bg);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .modal-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,122,255,0.12); }
+    .modal-btns { display: flex; gap: 8px; }
+    .modal-btn-skip {
+      flex: 1;
+      padding: 11px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--secondary);
+      background: var(--bg);
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .modal-btn-skip:hover { border-color: var(--text); color: var(--text); }
+    .modal-btn-save {
+      flex: 2;
+      padding: 11px;
+      border: none;
+      border-radius: 10px;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      background: var(--accent);
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .modal-btn-save:hover  { opacity: 0.85; }
+    .modal-btn-save:active { opacity: 0.70; }
+
     @media (max-width: 800px) {
       .topbar { padding: 0 16px; }
 
@@ -637,6 +749,22 @@
   </main>
 </div>
 
+<!-- ═══════════════════════════════════════════ -->
+<!--  INITIAL BALANCE MODAL                      -->
+<!-- ═══════════════════════════════════════════ -->
+<div id="init-balance-modal">
+  <div class="modal-card">
+    <p class="modal-title">Начальный баланс</p>
+    <p class="modal-sub">Укажите ваш текущий баланс, чтобы точнее отслеживать финансы.</p>
+    <input id="modal-balance-inp" class="modal-input" type="number" inputmode="decimal"
+           placeholder="0 ₽" min="0" step="1" />
+    <div class="modal-btns">
+      <button class="modal-btn-skip" onclick="closeBalanceModal()">Пропустить</button>
+      <button class="modal-btn-save" onclick="saveInitialBalance()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
 <button class="export-btn" onclick="exportJSON()">
   <i data-lucide="download"></i>
   Экспорт
@@ -652,6 +780,7 @@ const API_TIMEOUT = 4000; // ms before falling back to localStorage
 
 const EXP_CATS = ['Продукты','Машина','Квартира','Кафе и рестораны','Развлечения','Одежда','Здоровье','Прочее'];
 const INC_CATS = ['Зарплата','Подработка','Прочее'];
+const INIT_BAL_CATEGORY = 'Начальный баланс';
 
 const ICONS = {
   'Продукты':         'shopping-cart',
@@ -1018,6 +1147,10 @@ function showMainApp(username) {
   renderFilters();
   renderAll();
   lucide.createIcons();
+
+  if (txns.length === 0 && !lsGet(`fin_init_bal_dismissed_${username}`)) {
+    openBalanceModal();
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1103,7 +1236,10 @@ function renderHero(s) {
   document.getElementById('hero-card').innerHTML = `
     <div class="hero">
       <p class="hero-label">Баланс</p>
-      <p class="hero-balance${neg?' neg':''}">${neg?'−':''}${fmtNum(s.balance)}</p>
+      <div class="hero-balance-wrap">
+        <p class="hero-balance${neg?' neg':''}">${neg?'−':''}${fmtNum(s.balance)}</p>
+        <button class="balance-adjust-btn" onclick="openBalanceModal()" title="Изменить начальный баланс"><i data-lucide="pencil"></i></button>
+      </div>
       <div class="hero-row">
         <div class="hero-card inc">
           <p class="hero-card-lbl">Доходы</p>
@@ -1371,6 +1507,90 @@ function exportJSON() {
   a.click();
   URL.revokeObjectURL(url);
 }
+
+// ═══════════════════════════════════════════════════════════
+//  INITIAL BALANCE MODAL
+// ═══════════════════════════════════════════════════════════
+function openBalanceModal() {
+  const existing = txns.find(t => t.category === INIT_BAL_CATEGORY && t.type === 'income');
+  const inp = document.getElementById('modal-balance-inp');
+  inp.value = existing ? existing.amount : '';
+  document.getElementById('init-balance-modal').classList.add('open');
+  setTimeout(() => inp.select(), 60);
+}
+
+function closeBalanceModal() {
+  document.getElementById('init-balance-modal').classList.remove('open');
+  if (currentUser) lsSet(`fin_init_bal_dismissed_${currentUser.username}`, true);
+}
+
+async function saveInitialBalance() {
+  const inp = document.getElementById('modal-balance-inp');
+  const amount = parseFloat(inp.value);
+  if (!amount || amount < 0) {
+    inp.style.borderColor = 'var(--expense)';
+    inp.focus();
+    setTimeout(() => inp.style.borderColor = '', 1200);
+    return;
+  }
+
+  // Remove any existing initial balance entry
+  const existing = txns.find(t => t.category === INIT_BAL_CATEGORY && t.type === 'income');
+  if (existing) {
+    if (apiMode) {
+      try {
+        await apiFetch(`/transactions/${existing.id}`, { method: 'DELETE', headers: authHeaders(false) });
+      } catch { setApiMode(false); }
+    }
+    txns = txns.filter(t => !(t.category === INIT_BAL_CATEGORY && t.type === 'income'));
+  }
+
+  const tx = {
+    id:       uid(),
+    type:     'income',
+    amount:   Math.round(amount),
+    category: INIT_BAL_CATEGORY,
+    date:     todayStr(),
+    comment:  '',
+  };
+
+  if (apiMode) {
+    try {
+      const catId = await getOrCreateCategory(INIT_BAL_CATEGORY, 'income');
+      const r = await apiFetch('/transactions/', {
+        method:  'POST',
+        headers: authHeaders(),
+        body:    JSON.stringify({
+          type:        'income',
+          amount:      tx.amount,
+          category_id: catId || undefined,
+          description: null,
+          date:        tx.date,
+        }),
+      });
+      if (r.ok) { const d = await r.json(); tx.id = String(d.id); }
+      else       setApiMode(false);
+    } catch { setApiMode(false); }
+  }
+
+  txns.push(tx);
+  saveLocalData();
+  document.getElementById('init-balance-modal').classList.remove('open');
+  if (currentUser) lsSet(`fin_init_bal_dismissed_${currentUser.username}`, true);
+  renderAll();
+}
+
+// Close modal on backdrop click
+document.getElementById('init-balance-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeBalanceModal();
+});
+// Close on Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeBalanceModal();
+});
+document.getElementById('modal-balance-inp').addEventListener('keydown', e => {
+  if (e.key === 'Enter') saveInitialBalance();
+});
 
 // ═══════════════════════════════════════════════════════════
 //  INIT
