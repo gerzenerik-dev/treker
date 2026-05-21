@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from fastapi import Depends, FastAPI
@@ -45,8 +46,10 @@ def debug_db_info(db: Session = Depends(get_db)) -> dict:
     user_count = db.query(User).count()
     db_url = DATABASE_URL
     db_type = "postgresql" if db_url.startswith("postgres") else "sqlite"
+    env_keys = [k for k in os.environ if "DATA" in k or "SECRET" in k]
     return {
         "database_url": db_url[:30],
         "user_count": user_count,
         "db_type": db_type,
+        "env_keys": env_keys,
     }
