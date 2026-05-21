@@ -1,10 +1,13 @@
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from sqlalchemy.orm import Session
 
-from app.database import Base, engine
+from app.config import settings
+from app.database import Base, engine, get_db
+from app.models.user import User
 from app.routers import admin, auth, categories, transactions, users
 
 HTML_FILE = Path(__file__).parent.parent / "finance-tracker.html"
@@ -36,3 +39,15 @@ def serve_frontend() -> FileResponse:
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok"}
+
+
+@app.get("/debug/db-info")
+def debug_db_info(db: Session = Depends(get_db)) -> dict:
+    user_count = db.query(User).count()
+    db_url = settings.DATABASE_URL
+    db_type = "postgresql" if db_url.startswith("postgres") else "sqlite"
+    return {
+        "database_url": db_url[:30],
+        "user_count": user_count,
+        "db_type": db_type,
+    }
