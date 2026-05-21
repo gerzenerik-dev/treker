@@ -5,8 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
-from app.config import settings
-from app.database import Base, engine, get_db
+from app.database import Base, DATABASE_URL, engine, get_db
 from app.models.user import User
 from app.routers import admin, auth, categories, transactions, users
 
@@ -44,7 +43,7 @@ def health() -> dict:
 @app.get("/debug/db-info")
 def debug_db_info(db: Session = Depends(get_db)) -> dict:
     user_count = db.query(User).count()
-    db_url = settings.DATABASE_URL
+    db_url = DATABASE_URL
     db_type = "postgresql" if db_url.startswith("postgres") else "sqlite"
     return {
         "database_url": db_url[:30],
