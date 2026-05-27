@@ -7,8 +7,9 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.database import Base, DATABASE_URL, engine, get_db
+from app.models.debt import Debt  # noqa: F401 — ensures debts table is created
 from app.models.user import User
-from app.routers import admin, auth, categories, transactions, users
+from app.routers import admin, auth, categories, debts, transactions, users
 
 HTML_FILE = Path(__file__).parent.parent / "finance-tracker.html"
 
@@ -29,6 +30,7 @@ app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(categories.router)
 app.include_router(transactions.router)
+app.include_router(debts.router)
 
 
 @app.get("/")

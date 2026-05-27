@@ -11,6 +11,7 @@
       --accent:    #007AFF;
       --income:    #34C759;
       --expense:   #FF3B30;
+      --warn:      #FF9500;
       --bg:        #fafafa;
       --card:      #ffffff;
       --text:      #1d1d1f;
@@ -334,6 +335,220 @@
     .hero-card-val { font-size: 19px; font-weight: 600; letter-spacing: -0.02em; }
     .hero-card.inc .hero-card-val { color: var(--income);  }
     .hero-card.exp .hero-card-val { color: var(--expense); }
+
+    .hero-row-debts { margin-top: 10px; }
+    .hero-card.debt-out { background: rgba(255,149,0,0.08); }
+    .hero-card.debt-in  { background: rgba(0,122,255,0.08); }
+    .hero-card.debt-out .hero-card-lbl,
+    .hero-card.debt-out .hero-card-val { color: var(--warn); }
+    .hero-card.debt-in  .hero-card-lbl,
+    .hero-card.debt-in  .hero-card-val { color: var(--accent); }
+
+    /* ── Debts card ── */
+    .debts-card-header {
+      padding: 16px 20px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .debts-card-header-lbl {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .debts-add-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      padding: 4px 10px;
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .debts-add-btn:hover { opacity: 0.85; }
+
+    .debts-body { padding: 10px 14px 14px; display: flex; flex-direction: column; gap: 10px; }
+
+    .debts-tabs {
+      display: flex;
+      background: rgba(0,0,0,0.05);
+      border-radius: 9px;
+      padding: 3px;
+      gap: 2px;
+    }
+    .debts-tab {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--secondary);
+      padding: 6px 12px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .debts-tab.on {
+      background: var(--card);
+      color: var(--text);
+      font-weight: 600;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+
+    .debts-filter-row { display: flex; gap: 5px; }
+
+    .debt-list { display: flex; flex-direction: column; }
+
+    .debt-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 4px;
+      border-bottom: 1px solid rgba(0,0,0,0.04);
+      position: relative;
+    }
+    .debt-item:last-child { border-bottom: none; }
+    .debt-item.closed { opacity: 0.55; }
+
+    .debt-ico {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .debt-ico.out { background: rgba(255,149,0,0.1); color: var(--warn); }
+    .debt-ico.in  { background: rgba(0,122,255,0.1); color: var(--accent); }
+    .debt-ico svg { width: 14px; height: 14px; }
+
+    .debt-info { flex: 1; min-width: 0; }
+    .debt-person { font-size: 14px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .debt-meta   { font-size: 12px; color: var(--secondary); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .debt-right { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; flex-shrink: 0; }
+    .debt-amt   { font-size: 14px; font-weight: 600; letter-spacing: -0.02em; }
+    .debt-ico.out ~ .debt-info ~ .debt-right .debt-amt { color: var(--warn); }
+    .debt-amt.out { color: var(--warn); }
+    .debt-amt.in  { color: var(--accent); }
+    .debt-due     { font-size: 11px; color: var(--secondary); }
+    .debt-due.overdue { color: var(--expense); font-weight: 600; }
+
+    .debt-status {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 6px;
+      flex-shrink: 0;
+      background: rgba(52,199,89,0.12);
+      color: #248a3d;
+    }
+    .debt-status.closed {
+      background: rgba(134,134,139,0.1);
+      color: var(--secondary);
+    }
+
+    .debt-close-btn {
+      font-family: var(--font);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 6px;
+      border: none;
+      background: rgba(52,199,89,0.12);
+      color: #248a3d;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .debt-close-btn:hover { background: rgba(52,199,89,0.22); }
+
+    .debt-del {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--expense);
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      padding: 3px 9px;
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .debt-item:hover .debt-del   { display: block; }
+    .debt-item:hover .debt-right,
+    .debt-item:hover .debt-close-btn,
+    .debt-item:hover .debt-status { visibility: hidden; }
+
+    /* ── Debt modal ── */
+    #debt-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.36);
+      z-index: 500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+    #debt-modal.open { display: flex; }
+    .debt-modal-direction {
+      display: flex;
+      background: rgba(0,0,0,0.05);
+      border-radius: 9px;
+      padding: 3px;
+      gap: 2px;
+      margin-bottom: 14px;
+    }
+    .debt-modal-dir-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--secondary);
+      padding: 7px 12px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .debt-modal-dir-btn.on {
+      background: var(--card);
+      color: var(--text);
+      font-weight: 600;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+    .debt-modal-fields { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+    .debt-modal-fields input {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 13px;
+      font-family: var(--font);
+      font-size: 15px;
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .debt-modal-fields input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,122,255,0.12); }
+    .debt-modal-fields input::placeholder { color: var(--secondary); }
 
     /* ── Form ── */
     .form-body { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 14px 16px 16px; }
@@ -732,6 +947,24 @@
       <div class="form-body" id="form-body"></div>
     </div>
 
+    <div class="card" id="debts-card">
+      <div class="debts-card-header">
+        <span class="debts-card-header-lbl">Долги и займы</span>
+        <button class="debts-add-btn" onclick="openDebtModal()">+ Добавить</button>
+      </div>
+      <div class="debts-body">
+        <div class="debts-tabs">
+          <button class="debts-tab on" id="debts-tab-out" onclick="setDebtTab('owed_by_me')">Я должен</button>
+          <button class="debts-tab"    id="debts-tab-in"  onclick="setDebtTab('owed_to_me')">Мне должны</button>
+        </div>
+        <div class="debts-filter-row">
+          <button class="pill on" id="debts-pill-active" onclick="setDebtFilter('active')">Активные</button>
+          <button class="pill"    id="debts-pill-all"    onclick="setDebtFilter('all')">Все</button>
+        </div>
+        <div class="debt-list" id="debt-list"></div>
+      </div>
+    </div>
+
     <div class="card">
       <div class="card-header">Фильтры</div>
       <div class="filters-body" id="filters-body"></div>
@@ -763,6 +996,29 @@
     <div class="modal-btns">
       <button class="modal-btn-skip" onclick="closeBalanceModal()">Пропустить</button>
       <button class="modal-btn-save" onclick="saveInitialBalance()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--  DEBT MODAL                                 -->
+<!-- ═══════════════════════════════════════════ -->
+<div id="debt-modal">
+  <div class="modal-card">
+    <p class="modal-title" id="debt-modal-title">Новый долг</p>
+    <div class="debt-modal-direction">
+      <button class="debt-modal-dir-btn on" id="dm-dir-out" onclick="setDebtModalDir('owed_by_me')">Я должен</button>
+      <button class="debt-modal-dir-btn"    id="dm-dir-in"  onclick="setDebtModalDir('owed_to_me')">Мне должны</button>
+    </div>
+    <div class="debt-modal-fields">
+      <input id="dm-person"  type="text"   placeholder="Имя человека" autocomplete="off" />
+      <input id="dm-amount"  type="number" inputmode="numeric" placeholder="Сумма, ₽" min="1" step="1" />
+      <input id="dm-due"     type="date" />
+      <input id="dm-comment" type="text"   placeholder="Комментарий (необязательно)" autocomplete="off" />
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn-skip" onclick="closeDebtModal()">Отмена</button>
+      <button class="modal-btn-save" onclick="saveDebt()">Сохранить</button>
     </div>
   </div>
 </div>
@@ -811,6 +1067,14 @@ let formType = 'expense';
 let apiCats     = [];  // [{ id, name, type }]
 let catIdToName = {};  // id  → name
 let catNameToId = {};  // "type:name" → id
+
+// Debts state
+let debts        = [];
+let debtsTab     = 'owed_by_me';  // 'owed_by_me' | 'owed_to_me'
+let debtsFilter  = 'active';      // 'active' | 'all'
+let debtsSummary = { total_owed_by_me: 0, total_owed_to_me: 0, count_owed_by_me: 0, count_owed_to_me: 0 };
+let editingDebtId   = null;       // null = creating; number = patching
+let debtModalDir    = 'owed_by_me';
 
 // ═══════════════════════════════════════════════════════════
 //  API HELPERS
@@ -868,6 +1132,8 @@ function lsSet(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
 
 function loadLocalData() {
   txns = lsGet(`fin_txns_${currentUser.username}`) || [];
+  loadLocalDebts();
+  recalcLocalDebtSummary();
 }
 
 function saveLocalData() {
@@ -939,6 +1205,67 @@ async function loadApiTransactions() {
 }
 
 // ═══════════════════════════════════════════════════════════
+//  DEBTS — API AND LOCAL STORAGE HELPERS
+// ═══════════════════════════════════════════════════════════
+function apiDebtToLocal(d) {
+  return {
+    id:        String(d.id),
+    direction: d.direction,
+    person:    d.person,
+    amount:    Math.round(parseFloat(d.amount)),
+    due_date:  d.due_date || null,
+    comment:   d.comment  || '',
+    status:    d.status,
+    created_at: d.created_at,
+    closed_at:  d.closed_at || null,
+  };
+}
+
+async function loadApiDebts() {
+  try {
+    const r = await apiFetch('/debts/?limit=500', { headers: authHeaders(false) });
+    if (!r.ok) return;
+    const data = await r.json();
+    debts = data.map(apiDebtToLocal);
+    saveLocalDebts();
+  } catch {
+    loadLocalDebts();
+    setApiMode(false);
+  }
+}
+
+async function loadApiDebtSummary() {
+  try {
+    const r = await apiFetch('/debts/summary', { headers: authHeaders(false) });
+    if (!r.ok) return;
+    const data = await r.json();
+    debtsSummary = {
+      total_owed_by_me: parseFloat(data.total_owed_by_me) || 0,
+      total_owed_to_me: parseFloat(data.total_owed_to_me) || 0,
+      count_owed_by_me: data.count_owed_by_me || 0,
+      count_owed_to_me: data.count_owed_to_me || 0,
+    };
+  } catch { recalcLocalDebtSummary(); }
+}
+
+function loadLocalDebts() {
+  debts = lsGet(`fin_debts_${currentUser.username}`) || [];
+}
+
+function saveLocalDebts() {
+  lsSet(`fin_debts_${currentUser.username}`, debts);
+}
+
+function recalcLocalDebtSummary() {
+  let tbm = 0, ttm = 0, cbm = 0, ctm = 0;
+  debts.filter(d => d.status === 'active').forEach(d => {
+    if (d.direction === 'owed_by_me') { tbm += d.amount; cbm++; }
+    else                              { ttm += d.amount; ctm++; }
+  });
+  debtsSummary = { total_owed_by_me: tbm, total_owed_to_me: ttm, count_owed_by_me: cbm, count_owed_to_me: ctm };
+}
+
+// ═══════════════════════════════════════════════════════════
 //  REFRESH — pull latest data from API and re-render
 // ═══════════════════════════════════════════════════════════
 async function refreshData() {
@@ -949,6 +1276,8 @@ async function refreshData() {
       if (!apiMode) setApiMode(true);
       await loadApiCategories();
       await loadApiTransactions();
+      await loadApiDebts();
+      await loadApiDebtSummary();
       renderAll();
     }
   } catch { /* silently ignore refresh errors */ }
@@ -1124,6 +1453,8 @@ async function initSession(username, token, useApi) {
     setApiMode(true);
     await loadApiCategories();
     await loadApiTransactions();
+    await loadApiDebts();
+    await loadApiDebtSummary();
   } else {
     setApiMode(false);
     loadLocalData();
@@ -1134,11 +1465,13 @@ async function initSession(username, token, useApi) {
 
 function logout() {
   lsSet('fin_session', null);
-  currentUser = null;
-  txns        = [];
-  apiCats     = [];
-  catIdToName = {};
-  catNameToId = {};
+  currentUser  = null;
+  txns         = [];
+  apiCats      = [];
+  catIdToName  = {};
+  catNameToId  = {};
+  debts        = [];
+  debtsSummary = { total_owed_by_me: 0, total_owed_to_me: 0, count_owed_by_me: 0, count_owed_to_me: 0 };
   setApiMode(false);
   showAuthScreen();
 }
@@ -1260,6 +1593,8 @@ function calcBreakdown(arr) {
 // ═══════════════════════════════════════════════════════════
 function renderHero(s) {
   const neg = s.balance < 0;
+  const d = debtsSummary;
+  const showDebtsRow = d.total_owed_by_me > 0 || d.total_owed_to_me > 0;
   document.getElementById('hero-card').innerHTML = `
     <div class="hero">
       <p class="hero-label">Баланс</p>
@@ -1277,7 +1612,78 @@ function renderHero(s) {
           <p class="hero-card-val">−${fmtNum(s.expenses)}</p>
         </div>
       </div>
+      ${showDebtsRow ? `
+      <div class="hero-row hero-row-debts">
+        <div class="hero-card debt-out">
+          <p class="hero-card-lbl">Я должен</p>
+          <p class="hero-card-val">${fmtNum(d.total_owed_by_me)}</p>
+        </div>
+        <div class="hero-card debt-in">
+          <p class="hero-card-lbl">Мне должны</p>
+          <p class="hero-card-val">${fmtNum(d.total_owed_to_me)}</p>
+        </div>
+      </div>` : ''}
     </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  RENDER — DEBTS CARD
+// ═══════════════════════════════════════════════════════════
+function getFilteredDebts() {
+  return debts.filter(d => {
+    if (d.direction !== debtsTab) return false;
+    if (debtsFilter === 'active' && d.status !== 'active') return false;
+    return true;
+  });
+}
+
+function renderDebtsCard() {
+  // Sync tab buttons
+  document.getElementById('debts-tab-out')?.classList.toggle('on', debtsTab === 'owed_by_me');
+  document.getElementById('debts-tab-in')?.classList.toggle('on',  debtsTab === 'owed_to_me');
+  document.getElementById('debts-pill-active')?.classList.toggle('on', debtsFilter === 'active');
+  document.getElementById('debts-pill-all')?.classList.toggle('on',    debtsFilter === 'all');
+
+  const arr = getFilteredDebts();
+  const isOut = debtsTab === 'owed_by_me';
+  const emptyMsg = isOut ? 'Нет активных долгов' : 'Нет активных займов';
+
+  const listEl = document.getElementById('debt-list');
+  if (!listEl) return;
+
+  if (arr.length === 0) {
+    listEl.innerHTML = `<div class="empty">${debtsFilter === 'active' ? emptyMsg : 'Пусто'}</div>`;
+    return;
+  }
+
+  const today = todayStr();
+  listEl.innerHTML = arr.map(d => {
+    const isClosed  = d.status === 'closed';
+    const cls       = isOut ? 'out' : 'in';
+    const icon      = isOut ? 'arrow-up-right' : 'arrow-down-left';
+    const closeLabel = isOut ? 'Оплатил' : 'Вернули';
+    const closedLabel = isOut ? 'Оплачено' : 'Возвращено';
+    const overdue   = !isClosed && d.due_date && d.due_date < today;
+    const dueTxt    = d.due_date ? `до ${fmtDate(d.due_date)}` : '';
+    const meta      = [dueTxt, d.comment ? esc(d.comment) : ''].filter(Boolean).join(' · ');
+
+    return `
+      <div class="debt-item${isClosed ? ' closed' : ''}">
+        <div class="debt-ico ${cls}"><i data-lucide="${icon}"></i></div>
+        <div class="debt-info">
+          <p class="debt-person">${esc(d.person)}</p>
+          ${meta ? `<p class="debt-meta">${meta}</p>` : ''}
+        </div>
+        <div class="debt-right">
+          <p class="debt-amt ${cls}">${fmtNum(d.amount)}</p>
+          ${d.due_date ? `<p class="debt-due${overdue?' overdue':''}">${fmtDate(d.due_date)}</p>` : ''}
+        </div>
+        ${isClosed
+          ? `<span class="debt-status closed">${closedLabel}</span>`
+          : `<button class="debt-close-btn" onclick="closeDebt('${esc(String(d.id))}')">${closeLabel}</button>`}
+        <button class="debt-del" onclick="deleteDebt('${esc(String(d.id))}')">Удалить</button>
+      </div>`;
+  }).join('');
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1426,6 +1832,7 @@ function renderAll() {
   const bdwn     = calcBreakdown(filtered);
 
   renderHero(summary);
+  renderDebtsCard();
   renderBreakdown(bdwn);
   renderList(filtered);
 
@@ -1611,13 +2018,176 @@ async function saveInitialBalance() {
   renderAll();
 }
 
+// ═══════════════════════════════════════════════════════════
+//  DEBT ACTIONS
+// ═══════════════════════════════════════════════════════════
+function setDebtTab(direction) {
+  debtsTab = direction;
+  renderDebtsCard();
+  lucide.createIcons();
+}
+
+function setDebtFilter(status) {
+  debtsFilter = status;
+  renderDebtsCard();
+  lucide.createIcons();
+}
+
+function setDebtModalDir(direction) {
+  debtModalDir = direction;
+  document.getElementById('dm-dir-out').classList.toggle('on', direction === 'owed_by_me');
+  document.getElementById('dm-dir-in').classList.toggle('on',  direction === 'owed_to_me');
+}
+
+function openDebtModal(id = null) {
+  editingDebtId = id;
+  const isEdit = id !== null;
+  document.getElementById('debt-modal-title').textContent = isEdit ? 'Редактировать' : 'Новый долг';
+
+  if (isEdit) {
+    const d = debts.find(x => String(x.id) === String(id));
+    if (d) {
+      debtModalDir = d.direction;
+      document.getElementById('dm-person').value  = d.person;
+      document.getElementById('dm-amount').value  = d.amount;
+      document.getElementById('dm-due').value     = d.due_date || '';
+      document.getElementById('dm-comment').value = d.comment  || '';
+    }
+  } else {
+    debtModalDir = debtsTab; // default to current tab direction
+    document.getElementById('dm-person').value  = '';
+    document.getElementById('dm-amount').value  = '';
+    document.getElementById('dm-due').value     = '';
+    document.getElementById('dm-comment').value = '';
+  }
+
+  document.getElementById('dm-dir-out').classList.toggle('on', debtModalDir === 'owed_by_me');
+  document.getElementById('dm-dir-in').classList.toggle('on',  debtModalDir === 'owed_to_me');
+  document.getElementById('debt-modal').classList.add('open');
+  setTimeout(() => document.getElementById('dm-person')?.focus(), 60);
+}
+
+function closeDebtModal() {
+  document.getElementById('debt-modal').classList.remove('open');
+  editingDebtId = null;
+}
+
+async function saveDebt() {
+  const person  = document.getElementById('dm-person').value.trim();
+  const amount  = parseFloat(document.getElementById('dm-amount').value);
+  const dueDate = document.getElementById('dm-due').value || null;
+  const comment = document.getElementById('dm-comment').value.trim() || null;
+
+  if (!person) {
+    const el = document.getElementById('dm-person');
+    el.style.borderColor = 'var(--expense)';
+    el.focus();
+    setTimeout(() => el.style.borderColor = '', 1200);
+    return;
+  }
+  if (!amount || amount <= 0) {
+    const el = document.getElementById('dm-amount');
+    el.style.borderColor = 'var(--expense)';
+    el.focus();
+    setTimeout(() => el.style.borderColor = '', 1200);
+    return;
+  }
+
+  const isEdit = editingDebtId !== null;
+  const payload = { direction: debtModalDir, person, amount: Math.round(amount), due_date: dueDate, comment };
+
+  if (apiMode) {
+    try {
+      const r = isEdit
+        ? await apiFetch(`/debts/${editingDebtId}`, { method: 'PATCH', headers: authHeaders(), body: JSON.stringify(payload) })
+        : await apiFetch('/debts/', { method: 'POST', headers: authHeaders(), body: JSON.stringify(payload) });
+      if (r.ok) {
+        const d = await r.json();
+        if (isEdit) {
+          debts = debts.map(x => String(x.id) === String(editingDebtId) ? apiDebtToLocal(d) : x);
+        } else {
+          debts.unshift(apiDebtToLocal(d));
+        }
+        saveLocalDebts();
+        await loadApiDebtSummary();
+        closeDebtModal();
+        renderAll();
+        lucide.createIcons();
+        return;
+      }
+      setApiMode(false);
+    } catch { setApiMode(false); }
+  }
+
+  // Local fallback
+  if (isEdit) {
+    debts = debts.map(x => String(x.id) === String(editingDebtId)
+      ? { ...x, ...payload, amount: Math.round(amount) }
+      : x);
+  } else {
+    debts.unshift({ id: uid(), ...payload, amount: Math.round(amount), status: 'active', created_at: new Date().toISOString(), closed_at: null });
+  }
+  saveLocalDebts();
+  recalcLocalDebtSummary();
+  closeDebtModal();
+  renderAll();
+  lucide.createIcons();
+}
+
+async function closeDebt(id) {
+  if (apiMode) {
+    try {
+      const r = await apiFetch(`/debts/${id}`, { method: 'PATCH', headers: authHeaders(), body: JSON.stringify({ status: 'closed' }) });
+      if (r.ok) {
+        const d = await r.json();
+        debts = debts.map(x => String(x.id) === String(id) ? apiDebtToLocal(d) : x);
+        saveLocalDebts();
+        await loadApiDebtSummary();
+        renderAll();
+        lucide.createIcons();
+        return;
+      }
+      setApiMode(false);
+    } catch { setApiMode(false); }
+  }
+  // Local fallback
+  debts = debts.map(x => String(x.id) === String(id) ? { ...x, status: 'closed', closed_at: new Date().toISOString() } : x);
+  saveLocalDebts();
+  recalcLocalDebtSummary();
+  renderAll();
+  lucide.createIcons();
+}
+
+async function deleteDebt(id) {
+  if (!confirm('Удалить эту запись?')) return;
+
+  if (apiMode) {
+    try {
+      await apiFetch(`/debts/${id}`, { method: 'DELETE', headers: authHeaders(false) });
+    } catch { setApiMode(false); }
+  }
+  debts = debts.filter(x => String(x.id) !== String(id));
+  saveLocalDebts();
+  recalcLocalDebtSummary();
+  renderAll();
+  lucide.createIcons();
+}
+
+// ─── Debt modal events ────────────────────────────────────
+document.getElementById('debt-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeDebtModal();
+});
+['dm-person','dm-amount','dm-due','dm-comment'].forEach(id => {
+  document.getElementById(id)?.addEventListener('keydown', e => { if (e.key === 'Enter') saveDebt(); });
+});
+
 // Close modal on backdrop click
 document.getElementById('init-balance-modal').addEventListener('click', function(e) {
   if (e.target === this) closeBalanceModal();
 });
 // Close on Escape
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeBalanceModal();
+  if (e.key === 'Escape') { closeBalanceModal(); closeDebtModal(); }
 });
 document.getElementById('modal-balance-inp').addEventListener('keydown', e => {
   if (e.key === 'Enter') saveInitialBalance();
@@ -1651,6 +2221,8 @@ async function init() {
       setApiMode(true);
       await loadApiCategories();
       await loadApiTransactions();
+      await loadApiDebts();
+      await loadApiDebtSummary();
     } else {
       setApiMode(false);
       loadLocalData();
