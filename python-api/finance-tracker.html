@@ -939,6 +939,22 @@ async function loadApiTransactions() {
 }
 
 // ═══════════════════════════════════════════════════════════
+//  REFRESH — pull latest data from API and re-render
+// ═══════════════════════════════════════════════════════════
+async function refreshData() {
+  if (!currentUser?.token) return; // offline-only or not logged in
+  try {
+    const apiUp = await probeApi();
+    if (apiUp) {
+      if (!apiMode) setApiMode(true);
+      await loadApiCategories();
+      await loadApiTransactions();
+      renderAll();
+    }
+  } catch { /* silently ignore refresh errors */ }
+}
+
+// ═══════════════════════════════════════════════════════════
 //  AUTH — SCREEN LOGIC
 // ═══════════════════════════════════════════════════════════
 let authTab = 'login';
@@ -1605,6 +1621,13 @@ document.addEventListener('keydown', e => {
 });
 document.getElementById('modal-balance-inp').addEventListener('keydown', e => {
   if (e.key === 'Enter') saveInitialBalance();
+});
+
+// ═══════════════════════════════════════════════════════════
+//  VISIBILITY — refresh when tab/window becomes active again
+// ═══════════════════════════════════════════════════════════
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') refreshData();
 });
 
 // ═══════════════════════════════════════════════════════════
