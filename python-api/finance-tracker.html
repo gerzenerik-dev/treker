@@ -1658,11 +1658,12 @@ function renderDebtsCard() {
 
   const today = todayStr();
   listEl.innerHTML = arr.map(d => {
-    const isClosed  = d.status === 'closed';
-    const cls       = isOut ? 'out' : 'in';
-    const icon      = isOut ? 'arrow-up-right' : 'arrow-down-left';
-    const closeLabel = isOut ? 'Оплатил' : 'Вернули';
-    const closedLabel = isOut ? 'Оплачено' : 'Возвращено';
+    const isClosed    = d.status === 'closed';
+    const isItemOut   = d.direction === 'owed_by_me';
+    const cls         = isItemOut ? 'out' : 'in';
+    const icon        = isItemOut ? 'arrow-up-right' : 'arrow-down-left';
+    const closeLabel  = isItemOut ? 'Оплатил' : 'Вернули';
+    const closedLabel = isItemOut ? 'Оплачено' : 'Возвращено';
     const overdue   = !isClosed && d.due_date && d.due_date < today;
     const dueTxt    = d.due_date ? `до ${fmtDate(d.due_date)}` : '';
     const meta      = [dueTxt, d.comment ? esc(d.comment) : ''].filter(Boolean).join(' · ');
