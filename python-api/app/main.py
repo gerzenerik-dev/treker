@@ -35,7 +35,15 @@ app.include_router(debts.router)
 
 @app.get("/")
 def serve_frontend() -> FileResponse:
-    return FileResponse(HTML_FILE, media_type="text/html")
+    return FileResponse(
+        HTML_FILE,
+        media_type="text/html",
+        headers={
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
 
 
 @app.get("/health")

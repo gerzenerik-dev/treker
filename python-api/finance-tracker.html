@@ -28,6 +28,7 @@
       color: var(--text);
       line-height: 1.5;
       min-height: 100vh;
+      transition: background 0.2s, color 0.2s;
     }
 
     /* ── Auth overlay ── */
@@ -263,7 +264,7 @@
     .right-panel { display: flex; flex-direction: column; gap: 14px; }
 
     /* ── Card ── */
-    .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); transition: background 0.2s, box-shadow 0.2s; }
 
     .card-header {
       padding: 16px 20px 0;
@@ -358,6 +359,27 @@
       text-transform: uppercase;
       letter-spacing: 0.06em;
     }
+    .debts-header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .debts-balance-toggle {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--secondary);
+      cursor: pointer;
+      white-space: nowrap;
+      user-select: none;
+    }
+    .debts-balance-toggle input[type="checkbox"] {
+      accent-color: var(--accent);
+      cursor: pointer;
+      width: 13px;
+      height: 13px;
+    }
     .debts-add-btn {
       background: var(--accent);
       color: #fff;
@@ -371,6 +393,29 @@
       transition: opacity 0.15s;
     }
     .debts-add-btn:hover { opacity: 0.85; }
+
+    .hero-balance-hint {
+      font-size: 11px;
+      color: var(--secondary);
+      margin-top: -14px;
+      margin-bottom: 14px;
+    }
+
+    .theme-toggle-btn {
+      background: none;
+      border: none;
+      padding: 5px;
+      cursor: pointer;
+      color: var(--secondary);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: color 0.15s, background 0.15s;
+    }
+    .theme-toggle-btn:hover { color: var(--text); background: rgba(0,0,0,0.06); }
+    .theme-toggle-btn svg   { width: 16px; height: 16px; }
 
     .debts-body { padding: 10px 14px 14px; display: flex; flex-direction: column; gap: 10px; }
 
@@ -458,18 +503,18 @@
     .debt-close-btn {
       font-family: var(--font);
       font-size: 11px;
-      font-weight: 600;
-      padding: 3px 9px;
+      font-weight: 500;
+      padding: 3px 8px;
       border-radius: 6px;
-      border: none;
-      background: rgba(52,199,89,0.12);
-      color: #248a3d;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--secondary);
       cursor: pointer;
       flex-shrink: 0;
-      transition: background 0.15s;
+      transition: border-color 0.15s, color 0.15s;
       white-space: nowrap;
     }
-    .debt-close-btn:hover { background: rgba(52,199,89,0.22); }
+    .debt-close-btn:hover { border-color: var(--income); color: var(--income); }
 
     .debt-del {
       display: none;
@@ -903,6 +948,81 @@
       .f-field-span2 { grid-column: span 1; }
       .btn-add       { grid-column: span 1; }
     }
+
+    /* ── Dark theme ── */
+    html[data-theme="dark"] {
+      --bg:        #0a0a0a;
+      --card:      #1c1c1e;
+      --text:      #f5f5f7;
+      --secondary: #98989d;
+      --border:    rgba(255,255,255,0.1);
+      --shadow:    0 2px 8px rgba(0,0,0,0.3);
+      --accent:    #0a84ff;
+      --income:    #32d74b;
+      --expense:   #ff453a;
+      --warn:      #ff9f0a;
+    }
+
+    html[data-theme="dark"] .topbar {
+      background: rgba(10,10,10,0.85);
+    }
+
+    html[data-theme="dark"] .auth-tabs,
+    html[data-theme="dark"] .debts-tabs,
+    html[data-theme="dark"] .debt-modal-direction {
+      background: rgba(255,255,255,0.06);
+    }
+
+    html[data-theme="dark"] .pill {
+      background: transparent;
+    }
+
+    html[data-theme="dark"] .bar-track {
+      background: rgba(255,255,255,0.08);
+    }
+
+    html[data-theme="dark"] .tx-item {
+      border-bottom-color: rgba(255,255,255,0.06);
+    }
+
+    html[data-theme="dark"] .tx-item:hover {
+      background: rgba(255,255,255,0.04);
+    }
+
+    html[data-theme="dark"] .debt-item {
+      border-bottom-color: rgba(255,255,255,0.06);
+    }
+
+    html[data-theme="dark"] .f-field select,
+    html[data-theme="dark"] .flt-select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2398989d' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    }
+
+    html[data-theme="dark"] .theme-toggle-btn:hover {
+      background: rgba(255,255,255,0.08);
+    }
+
+    html[data-theme="dark"] .api-badge.online  { background: rgba(50,215,75,0.15);  color: #30d158; }
+    html[data-theme="dark"] .api-badge.offline { background: rgba(255,255,255,0.06); }
+
+    html[data-theme="dark"] .hero-card.inc      { background: rgba(50,215,75,0.1);   }
+    html[data-theme="dark"] .hero-card.exp      { background: rgba(255,69,58,0.1);   }
+    html[data-theme="dark"] .hero-card.debt-out { background: rgba(255,159,10,0.1);  }
+    html[data-theme="dark"] .hero-card.debt-in  { background: rgba(10,132,255,0.1);  }
+
+    html[data-theme="dark"] .tx-ico.exp { background: rgba(255,69,58,0.12); }
+    html[data-theme="dark"] .tx-ico.inc { background: rgba(50,215,75,0.12); }
+    html[data-theme="dark"] .tx-ico.neu { background: rgba(10,132,255,0.12); }
+
+    html[data-theme="dark"] .bd-icon.exp { background: rgba(255,69,58,0.12); }
+    html[data-theme="dark"] .bd-icon.inc { background: rgba(50,215,75,0.12); }
+
+    html[data-theme="dark"] .debt-ico.out { background: rgba(255,159,10,0.12); }
+    html[data-theme="dark"] .debt-ico.in  { background: rgba(10,132,255,0.12); }
+
+    html[data-theme="dark"] .left-panel::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.1);
+    }
   </style>
 </head>
 <body>
@@ -932,6 +1052,7 @@
   <span class="topbar-title">Финансы</span>
   <div class="topbar-right">
     <span class="topbar-count" id="tx-count"></span>
+    <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Сменить тему"><i data-lucide="moon"></i></button>
     <span class="api-badge"    id="api-badge" style="display:none;"></span>
     <span class="user-chip"    id="user-chip" style="display:none;"></span>
     <button class="logout-btn" id="logout-btn" onclick="logout()" style="display:none;">Выйти</button>
@@ -950,7 +1071,13 @@
     <div class="card" id="debts-card">
       <div class="debts-card-header">
         <span class="debts-card-header-lbl">Долги и займы</span>
-        <button class="debts-add-btn" onclick="openDebtModal()">+ Добавить</button>
+        <div class="debts-header-right">
+          <label class="debts-balance-toggle">
+            <input type="checkbox" id="debts-in-balance-chk" onchange="toggleDebtsInBalance()" />
+            Учитывать в балансе
+          </label>
+          <button class="debts-add-btn" onclick="openDebtModal()">+ Добавить</button>
+        </div>
       </div>
       <div class="debts-body">
         <div class="debts-tabs">
@@ -1075,6 +1202,8 @@ let debtsFilter  = 'active';      // 'active' | 'all'
 let debtsSummary = { total_owed_by_me: 0, total_owed_to_me: 0, count_owed_by_me: 0, count_owed_to_me: 0 };
 let editingDebtId   = null;       // null = creating; number = patching
 let debtModalDir    = 'owed_by_me';
+let debtsInBalance  = false;      // whether to subtract/add debts from displayed balance
+let currentTheme    = 'light';    // 'light' | 'dark'
 
 // ═══════════════════════════════════════════════════════════
 //  API HELPERS
@@ -1132,6 +1261,7 @@ function lsSet(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
 
 function loadLocalData() {
   txns = lsGet(`fin_txns_${currentUser.username}`) || [];
+  debtsInBalance = lsGet(`fin_debts_in_balance_${currentUser.username}`) === true;
   loadLocalDebts();
   recalcLocalDebtSummary();
 }
@@ -1449,6 +1579,9 @@ async function initSession(username, token, useApi) {
   currentUser = { username, token };
   lsSet('fin_session', { username, token });
 
+  // Load per-user preferences
+  debtsInBalance = lsGet(`fin_debts_in_balance_${username}`) === true;
+
   if (useApi && token) {
     setApiMode(true);
     await loadApiCategories();
@@ -1465,13 +1598,14 @@ async function initSession(username, token, useApi) {
 
 function logout() {
   lsSet('fin_session', null);
-  currentUser  = null;
-  txns         = [];
-  apiCats      = [];
-  catIdToName  = {};
-  catNameToId  = {};
-  debts        = [];
-  debtsSummary = { total_owed_by_me: 0, total_owed_to_me: 0, count_owed_by_me: 0, count_owed_to_me: 0 };
+  currentUser    = null;
+  txns           = [];
+  apiCats        = [];
+  catIdToName    = {};
+  catNameToId    = {};
+  debts          = [];
+  debtsSummary   = { total_owed_by_me: 0, total_owed_to_me: 0, count_owed_by_me: 0, count_owed_to_me: 0 };
+  debtsInBalance = false;
   setApiMode(false);
   showAuthScreen();
 }
@@ -1592,17 +1726,21 @@ function calcBreakdown(arr) {
 //  RENDER — HERO
 // ═══════════════════════════════════════════════════════════
 function renderHero(s) {
-  const neg = s.balance < 0;
   const d = debtsSummary;
-  const showDebtsRow = d.total_owed_by_me > 0 || d.total_owed_to_me > 0;
+  let balance = s.balance;
+  if (debtsInBalance) balance = balance - d.total_owed_by_me + d.total_owed_to_me;
+  const neg = balance < 0;
+  const showDebtsRow  = d.total_owed_by_me > 0 || d.total_owed_to_me > 0;
+  const showDebtHint  = debtsInBalance && (d.total_owed_by_me > 0 || d.total_owed_to_me > 0);
   document.getElementById('hero-card').innerHTML = `
     <div class="hero">
       <p class="hero-label">Баланс</p>
       <div class="hero-balance-wrap">
-        <p class="hero-balance${neg?' neg':''}">${neg?'−':''}${fmtNum(s.balance)}</p>
+        <p class="hero-balance${neg?' neg':''}">${neg?'−':''}${fmtNum(balance)}</p>
         <button class="balance-adjust-btn" onclick="openBalanceModal()" title="Изменить начальный баланс"><i data-lucide="pencil"></i></button>
         <button class="balance-adjust-btn" onclick="refreshData()" title="Обновить данные"><i data-lucide="rotate-cw"></i></button>
       </div>
+      ${showDebtHint ? `<p class="hero-balance-hint">с учётом долгов</p>` : ''}
       <div class="hero-row">
         <div class="hero-card inc">
           <p class="hero-card-lbl">Доходы</p>
@@ -1644,6 +1782,9 @@ function renderDebtsCard() {
   document.getElementById('debts-tab-in')?.classList.toggle('on',  debtsTab === 'owed_to_me');
   document.getElementById('debts-pill-active')?.classList.toggle('on', debtsFilter === 'active');
   document.getElementById('debts-pill-all')?.classList.toggle('on',    debtsFilter === 'all');
+  // Sync balance toggle checkbox
+  const chk = document.getElementById('debts-in-balance-chk');
+  if (chk) chk.checked = debtsInBalance;
 
   const arr = getFilteredDebts();
   const isOut = debtsTab === 'owed_by_me';
@@ -1663,8 +1804,8 @@ function renderDebtsCard() {
     const isItemOut   = d.direction === 'owed_by_me';
     const cls         = isItemOut ? 'out' : 'in';
     const icon        = isItemOut ? 'arrow-up-right' : 'arrow-down-left';
-    const closeLabel  = isItemOut ? 'Оплатил' : 'Вернули';
-    const closedLabel = isItemOut ? 'Оплачено' : 'Возвращено';
+    const closeLabel  = isItemOut ? 'Отметить оплаченным' : 'Отметить возвращённым';
+    const closedLabel = isItemOut ? '✓ Оплачено' : '✓ Возвращено';
     const overdue   = !isClosed && d.due_date && d.due_date < today;
     const dueTxt    = d.due_date ? `до ${fmtDate(d.due_date)}` : '';
     const meta      = [dueTxt, d.comment ? esc(d.comment) : ''].filter(Boolean).join(' · ');
@@ -2175,6 +2316,33 @@ async function deleteDebt(id) {
   lucide.createIcons();
 }
 
+// ═══════════════════════════════════════════════════════════
+//  THEME
+// ═══════════════════════════════════════════════════════════
+function applyTheme(theme, save = true) {
+  currentTheme = theme;
+  document.documentElement.setAttribute('data-theme', theme);
+  const btn = document.getElementById('theme-toggle-btn');
+  if (btn) {
+    btn.innerHTML = theme === 'dark'
+      ? '<i data-lucide="sun"></i>'
+      : '<i data-lucide="moon"></i>';
+    lucide.createIcons();
+  }
+  if (save) lsSet('fin_theme', theme);
+}
+
+function toggleTheme() {
+  applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+}
+
+function toggleDebtsInBalance() {
+  const chk = document.getElementById('debts-in-balance-chk');
+  debtsInBalance = chk ? chk.checked : false;
+  lsSet(`fin_debts_in_balance_${currentUser.username}`, debtsInBalance);
+  renderHero(calcSummary(getFiltered()));
+}
+
 // ─── Debt modal events ────────────────────────────────────
 document.getElementById('debt-modal').addEventListener('click', function(e) {
   if (e.target === this) closeDebtModal();
@@ -2206,6 +2374,16 @@ document.addEventListener('visibilitychange', () => {
 //  INIT
 // ═══════════════════════════════════════════════════════════
 async function init() {
+  // Apply saved theme or fall back to system preference
+  const savedTheme = lsGet('fin_theme');
+  const systemDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+  applyTheme(savedTheme || (systemDark ? 'dark' : 'light'), !!savedTheme);
+
+  // Automatically follow OS theme changes when no manual preference is set
+  window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    if (!lsGet('fin_theme')) applyTheme(e.matches ? 'dark' : 'light', false);
+  });
+
   const session = lsGet('fin_session');
 
   if (!session?.username) {
@@ -2215,6 +2393,9 @@ async function init() {
   }
 
   currentUser = { username: session.username, token: session.token || null };
+
+  // Load per-user preferences
+  debtsInBalance = lsGet(`fin_debts_in_balance_${currentUser.username}`) === true;
 
   if (currentUser.token) {
     // Had an API token — check if API is still reachable
