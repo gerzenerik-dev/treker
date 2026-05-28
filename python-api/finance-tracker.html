@@ -516,6 +516,22 @@
     }
     .debt-close-btn:hover { border-color: var(--income); color: var(--income); }
 
+    .debt-edit-btn {
+      padding: 3px 6px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--secondary);
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .debt-edit-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .debt-edit-btn svg   { width: 12px; height: 12px; }
+
     .debt-del {
       display: none;
       position: absolute;
@@ -535,6 +551,7 @@
     }
     .debt-item:hover .debt-del   { display: block; }
     .debt-item:hover .debt-right,
+    .debt-item:hover .debt-edit-btn,
     .debt-item:hover .debt-close-btn,
     .debt-item:hover .debt-status { visibility: hidden; }
 
@@ -1823,7 +1840,8 @@ function renderDebtsCard() {
         </div>
         ${isClosed
           ? `<span class="debt-status closed">${closedLabel}</span>`
-          : `<button class="debt-close-btn" onclick="closeDebt('${esc(String(d.id))}')">${closeLabel}</button>`}
+          : `<button class="debt-edit-btn" onclick="openDebtModal('${esc(String(d.id))}')" title="Редактировать"><i data-lucide="pencil"></i></button>
+             <button class="debt-close-btn" onclick="closeDebt('${esc(String(d.id))}')">${closeLabel}</button>`}
         <button class="debt-del" onclick="deleteDebt('${esc(String(d.id))}')">Удалить</button>
       </div>`;
   }).join('');
