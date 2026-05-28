@@ -1601,6 +1601,7 @@ function renderHero(s) {
       <div class="hero-balance-wrap">
         <p class="hero-balance${neg?' neg':''}">${neg?'−':''}${fmtNum(s.balance)}</p>
         <button class="balance-adjust-btn" onclick="openBalanceModal()" title="Изменить начальный баланс"><i data-lucide="pencil"></i></button>
+        <button class="balance-adjust-btn" onclick="refreshData()" title="Обновить данные"><i data-lucide="rotate-cw"></i></button>
       </div>
       <div class="hero-row">
         <div class="hero-card inc">
@@ -2235,6 +2236,9 @@ async function init() {
 
   showMainApp(currentUser.username);
 }
+
+// Auto-refresh every 30 seconds while the page is open
+setInterval(() => refreshData(), 30000);
 
 init();
 </script>
