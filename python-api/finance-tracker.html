@@ -316,6 +316,33 @@
     .balance-adjust-btn:hover { color: var(--accent); background: rgba(0,122,255,0.08); }
     .balance-adjust-btn svg   { width: 14px; height: 14px; }
 
+    #topbar-refresh-btn { margin-top: 0; }
+    #topbar-refresh-btn svg { width: 16px; height: 16px; }
+
+    /* ── Pull-to-refresh indicator ── */
+    #ptr-indicator {
+      position: fixed;
+      top: 62px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--secondary);
+      box-shadow: var(--shadow);
+      z-index: 300;
+      display: none;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    #ptr-indicator.visible { display: flex; }
+
     .hero-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
     .hero-card { border-radius: 10px; padding: 12px 14px; text-align: left; }
@@ -1229,11 +1256,14 @@
   <div class="topbar-right">
     <span class="topbar-count" id="tx-count"></span>
     <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Сменить тему"><i data-lucide="moon"></i></button>
+    <button class="balance-adjust-btn" id="topbar-refresh-btn" onclick="refreshData()" title="Обновить данные" style="display:none;"><i data-lucide="rotate-cw"></i></button>
     <span class="api-badge"    id="api-badge" style="display:none;"></span>
     <span class="user-chip"    id="user-chip" style="display:none;"></span>
     <button class="logout-btn" id="logout-btn" onclick="logout()" style="display:none;">Выйти</button>
   </div>
 </div>
+
+<div id="ptr-indicator"><i data-lucide="rotate-cw" width="13" height="13"></i> Обновление…</div>
 
 <div class="layout">
   <aside class="left-panel">
@@ -1438,7 +1468,9 @@ let editingDebtId   = null;       // null = creating; number = patching
 let debtModalDir    = 'owed_by_me';
 let debtsInBalance  = false;      // whether to subtract/add debts from displayed balance
 let currentTheme    = 'light';    // 'light' | 'dark'
-let refreshInterval = null;       // handle for the 30s auto-refresh timer
+let _refreshTimer = null;         // handle for the 30s auto-refresh timer
+let _ptrStartY = 0;
+let _ptrActive = false;
 
 // ═══════════════════════════════════════════════════════════
 //  API HELPERS
@@ -1634,23 +1666,16 @@ function recalcLocalDebtSummary() {
 //  REFRESH — pull latest data from API and re-render
 // ═══════════════════════════════════════════════════════════
 async function refreshData() {
-  if (!currentUser?.token) return; // offline-only or not logged in
-  console.log('[refresh] refreshData() called');
+  if (!currentUser?.token) return;
   try {
-    const apiUp = await probeApi();
-    if (apiUp) {
-      if (!apiMode) setApiMode(true);
-      await loadApiCategories();
-      await loadApiTransactions();
-      await loadApiDebts();
-      await loadApiDebtSummary();
-      renderAll();
-      console.log('[refresh] renderAll() called after API reload');
-    } else {
-      console.log('[refresh] API unreachable, skipping reload');
-    }
-  } catch (err) {
-    console.error('[refresh] refreshData() error:', err);
+    await Promise.all([
+      loadApiTransactions(),
+      loadApiDebts(),
+      loadApiDebtSummary()
+    ]);
+    renderAll();
+  } catch (e) {
+    console.error('Refresh failed:', e);
   }
 }
 
@@ -1838,14 +1863,13 @@ async function initSession(username, token, useApi) {
 }
 
 function startRefreshInterval() {
-  clearInterval(refreshInterval);
-  refreshInterval = setInterval(() => refreshData(), 30000);
-  console.log('[refresh] 30s auto-refresh interval started');
+  clearInterval(_refreshTimer);
+  _refreshTimer = setInterval(() => { if (currentUser?.token) refreshData(); }, 30000);
 }
 
 function logout() {
-  clearInterval(refreshInterval);
-  refreshInterval = null;
+  clearInterval(_refreshTimer);
+  _refreshTimer = null;
   lsSet('fin_session', null);
   currentUser    = null;
   txns           = [];
@@ -1864,6 +1888,7 @@ function showAuthScreen() {
   document.getElementById('api-badge').style.display    = 'none';
   document.getElementById('user-chip').style.display    = 'none';
   document.getElementById('logout-btn').style.display   = 'none';
+  document.getElementById('topbar-refresh-btn').style.display = 'none';
   renderAuthForm();
   lucide.createIcons();
 }
@@ -1876,6 +1901,7 @@ function showMainApp(username) {
   chip.style.display = '';
 
   document.getElementById('logout-btn').style.display = '';
+  document.getElementById('topbar-refresh-btn').style.display = '';
 
   renderForm();
   renderFilters();
@@ -1888,6 +1914,36 @@ function showMainApp(username) {
     openBalanceModal();
   }
 }
+
+// ═══════════════════════════════════════════════════════════
+//  PULL-TO-REFRESH (mobile / iPhone PWA)
+// ═══════════════════════════════════════════════════════════
+document.addEventListener('touchstart', e => {
+  if (window.scrollY === 0) {
+    _ptrStartY = e.touches[0].clientY;
+    _ptrActive = false;
+  }
+}, { passive: true });
+
+document.addEventListener('touchmove', e => {
+  if (window.scrollY !== 0) return;
+  const delta = e.touches[0].clientY - _ptrStartY;
+  if (delta >= 80) {
+    _ptrActive = true;
+    document.getElementById('ptr-indicator').classList.add('visible');
+  }
+}, { passive: true });
+
+document.addEventListener('touchend', () => {
+  if (_ptrActive) {
+    _ptrActive = false;
+    refreshData().finally(() => {
+      document.getElementById('ptr-indicator').classList.remove('visible');
+    });
+  } else {
+    document.getElementById('ptr-indicator').classList.remove('visible');
+  }
+});
 
 // ═══════════════════════════════════════════════════════════
 //  UTILS
@@ -1989,7 +2045,6 @@ function renderHero(s) {
       <div class="hero-balance-wrap">
         <p class="hero-balance${neg?' neg':''}">${neg?'−':''}${fmtNum(balance)}</p>
         <button class="balance-adjust-btn" onclick="openBalanceModal()" title="Изменить начальный баланс"><i data-lucide="pencil"></i></button>
-        <button class="balance-adjust-btn" onclick="refreshData()" title="Обновить данные"><i data-lucide="rotate-cw"></i></button>
       </div>
       ${showDebtHint ? `<p class="hero-balance-hint">с учётом долгов</p>` : ''}
       <div class="hero-row">
