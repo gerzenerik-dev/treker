@@ -1438,6 +1438,7 @@ let editingDebtId   = null;       // null = creating; number = patching
 let debtModalDir    = 'owed_by_me';
 let debtsInBalance  = false;      // whether to subtract/add debts from displayed balance
 let currentTheme    = 'light';    // 'light' | 'dark'
+let refreshInterval = null;       // handle for the 30s auto-refresh timer
 
 // ═══════════════════════════════════════════════════════════
 //  API HELPERS
@@ -1634,6 +1635,7 @@ function recalcLocalDebtSummary() {
 // ═══════════════════════════════════════════════════════════
 async function refreshData() {
   if (!currentUser?.token) return; // offline-only or not logged in
+  console.log('[refresh] refreshData() called');
   try {
     const apiUp = await probeApi();
     if (apiUp) {
@@ -1643,8 +1645,13 @@ async function refreshData() {
       await loadApiDebts();
       await loadApiDebtSummary();
       renderAll();
+      console.log('[refresh] renderAll() called after API reload');
+    } else {
+      console.log('[refresh] API unreachable, skipping reload');
     }
-  } catch { /* silently ignore refresh errors */ }
+  } catch (err) {
+    console.error('[refresh] refreshData() error:', err);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1830,7 +1837,15 @@ async function initSession(username, token, useApi) {
   showMainApp(username);
 }
 
+function startRefreshInterval() {
+  clearInterval(refreshInterval);
+  refreshInterval = setInterval(() => refreshData(), 30000);
+  console.log('[refresh] 30s auto-refresh interval started');
+}
+
 function logout() {
+  clearInterval(refreshInterval);
+  refreshInterval = null;
   lsSet('fin_session', null);
   currentUser    = null;
   txns           = [];
@@ -1866,6 +1881,8 @@ function showMainApp(username) {
   renderFilters();
   renderAll();
   lucide.createIcons();
+
+  startRefreshInterval(); // start (or restart) the 30s auto-refresh
 
   if (txns.length === 0 && !lsGet(`fin_init_bal_dismissed_${username}`)) {
     openBalanceModal();
@@ -2836,7 +2853,7 @@ document.getElementById('modal-balance-inp').addEventListener('keydown', e => {
 //  VISIBILITY — refresh when tab/window becomes active again
 // ═══════════════════════════════════════════════════════════
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') refreshData();
+  if (!document.hidden && currentUser?.token) refreshData();
 });
 
 // ═══════════════════════════════════════════════════════════
@@ -2886,9 +2903,6 @@ async function init() {
 
   showMainApp(currentUser.username);
 }
-
-// Auto-refresh every 30 seconds while the page is open
-setInterval(() => refreshData(), 30000);
 
 init();
 </script>
