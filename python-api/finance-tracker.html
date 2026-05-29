@@ -1590,12 +1590,12 @@ function apiTxToLocal(tx) {
 async function loadApiTransactions() {
   try {
     const r = await apiFetch('/transactions/?limit=500', { headers: authHeaders(false) });
-    if (!r.ok) return;
+    if (!r.ok) { console.error('[loader] loadApiTransactions non-ok:', r.status); return; }
     const data = await r.json();
     txns = data.map(apiTxToLocal);
     saveLocalData(); // keep local cache in sync
-  } catch {
-    // API failed mid-session — fall back to cached local data
+  } catch (e) {
+    console.error('[loader] loadApiTransactions failed:', e);
     loadLocalData();
     setApiMode(false);
   }
@@ -1621,11 +1621,12 @@ function apiDebtToLocal(d) {
 async function loadApiDebts() {
   try {
     const r = await apiFetch('/debts/?limit=500', { headers: authHeaders(false) });
-    if (!r.ok) return;
+    if (!r.ok) { console.error('[loader] loadApiDebts non-ok:', r.status); return; }
     const data = await r.json();
     debts = data.map(apiDebtToLocal);
     saveLocalDebts();
-  } catch {
+  } catch (e) {
+    console.error('[loader] loadApiDebts failed:', e);
     loadLocalDebts();
     setApiMode(false);
   }
@@ -1634,7 +1635,7 @@ async function loadApiDebts() {
 async function loadApiDebtSummary() {
   try {
     const r = await apiFetch('/debts/summary', { headers: authHeaders(false) });
-    if (!r.ok) return;
+    if (!r.ok) { console.error('[loader] loadApiDebtSummary non-ok:', r.status); return; }
     const data = await r.json();
     debtsSummary = {
       total_owed_by_me: parseFloat(data.total_owed_by_me) || 0,
@@ -1642,7 +1643,10 @@ async function loadApiDebtSummary() {
       count_owed_by_me: data.count_owed_by_me || 0,
       count_owed_to_me: data.count_owed_to_me || 0,
     };
-  } catch { recalcLocalDebtSummary(); }
+  } catch (e) {
+    console.error('[loader] loadApiDebtSummary failed:', e);
+    recalcLocalDebtSummary();
+  }
 }
 
 function loadLocalDebts() {
@@ -1667,6 +1671,8 @@ function recalcLocalDebtSummary() {
 // ═══════════════════════════════════════════════════════════
 async function refreshData() {
   if (!currentUser?.token) return;
+  const badge = document.getElementById('api-badge');
+  if (badge) badge.title = 'Last refresh: ' + new Date().toLocaleTimeString();
   try {
     await Promise.all([
       loadApiTransactions(),
@@ -1674,6 +1680,7 @@ async function refreshData() {
       loadApiDebtSummary()
     ]);
     renderAll();
+    lucide.createIcons();
   } catch (e) {
     console.error('Refresh failed:', e);
   }
@@ -1864,6 +1871,8 @@ async function initSession(username, token, useApi) {
 
 function startRefreshInterval() {
   clearInterval(_refreshTimer);
+  console.log('[refresh] interval started, token:', !!currentUser?.token);
+  refreshData(); // immediate call to confirm the path works on login
   _refreshTimer = setInterval(() => { if (currentUser?.token) refreshData(); }, 30000);
 }
 
