@@ -1674,6 +1674,8 @@ async function refreshData() {
   const badge = document.getElementById('api-badge');
   if (badge) badge.title = 'Last refresh: ' + new Date().toLocaleTimeString();
   try {
+    // Categories must resolve first — apiTxToLocal depends on catIdToName
+    await loadApiCategories();
     await Promise.all([
       loadApiTransactions(),
       loadApiDebts(),
@@ -2575,15 +2577,16 @@ function renderImportCatMapping(rows) {
 
 async function doImport() {
   const btn = document.getElementById('import-do-btn');
+  const res = document.getElementById('import-result');
   btn.disabled = true;
-  btn.textContent = 'Импортирование…';
 
   const catMapEls = document.querySelectorAll('#import-cat-mapping .cat-map-select');
   const catMap = {};
   catMapEls.forEach(sel => { catMap[sel.dataset.src] = sel.value; });
 
-  let imported = 0, skipped = 0;
-
+  // Build valid rows first (skip unparseable amounts)
+  const validRows = [];
+  let skipped = 0;
   for (const row of importParsedRows) {
     const rawAmt = importColMap.amount !== null ? row[importColMap.amount] : null;
     if (rawAmt === null || rawAmt === undefined || rawAmt === '') { skipped++; continue; }
@@ -2591,16 +2594,30 @@ async function doImport() {
       parseFloat(String(rawAmt).replace(/[^0-9.,-]/g, '').replace(',', '.'))
     ));
     if (!amount || isNaN(amount)) { skipped++; continue; }
-
     const type     = importDefaultType;
     const rawCat   = importColMap.category !== null ? String(row[importColMap.category] ?? '').trim() : '';
     const category = catMap[rawCat] || 'Прочее';
     const date     = parseImportDate(importColMap.date !== null ? row[importColMap.date] : null);
     const comment  = importColMap.comment !== null ? String(row[importColMap.comment] ?? '').trim() : '';
+    validRows.push({ type, amount, category, date, comment });
+  }
 
-    const tx = { id: uid(), type, amount, category, date, comment };
+  if (validRows.length === 0) {
+    btn.disabled = false;
+    btn.textContent = `Импортировать (${importParsedRows.length} шт.)`;
+    res.textContent = `Не удалось импортировать ни одной строки (пропущено: ${skipped})`;
+    res.className = 'import-result err';
+    return;
+  }
 
-    if (apiMode) {
+  let succeeded = 0, failed = 0;
+  const total = validRows.length;
+
+  if (apiMode) {
+    // API mode: POST each row, track progress, never touch localStorage
+    for (let i = 0; i < validRows.length; i++) {
+      const { type, amount, category, date, comment } = validRows[i];
+      btn.textContent = `Импортируется: ${i + 1} / ${total}`;
       try {
         const catId = await getOrCreateCategory(category, type);
         const r = await apiFetch('/transactions/', {
@@ -2608,27 +2625,41 @@ async function doImport() {
           headers: authHeaders(),
           body:    JSON.stringify({ type, amount, category_id: catId || undefined, description: comment || null, date }),
         });
-        if (r.ok) { const d = await r.json(); tx.id = String(d.id); }
-        else setApiMode(false);
-      } catch { setApiMode(false); }
+        if (r.ok) {
+          succeeded++;
+        } else {
+          console.error('[import] POST failed:', r.status, { type, amount, category, date });
+          failed++;
+        }
+      } catch (e) {
+        console.error('[import] POST error:', e, { type, amount, category, date });
+        failed++;
+      }
     }
-
-    txns.push(tx);
-    imported++;
+    // Reload from API so the list reflects reality
+    await refreshData();
+  } else {
+    // Offline mode: push to local array and save
+    for (const { type, amount, category, date, comment } of validRows) {
+      txns.push({ id: uid(), type, amount, category, date, comment });
+      succeeded++;
+    }
+    saveLocalData();
+    renderAll();
   }
-
-  saveLocalData();
-  renderAll();
 
   btn.disabled = false;
   btn.textContent = `Импортировать (${importParsedRows.length} шт.)`;
 
-  if (imported > 0) {
+  const resultMsg = failed > 0
+    ? `Импортировано: ${succeeded} из ${total}. Ошибок: ${failed}`
+    : `Импортировано: ${succeeded} транзакций`;
+
+  if (succeeded > 0) {
     closeImportModal();
-    setTimeout(() => alert(`Импортировано: ${imported} транзакций`), 80);
+    setTimeout(() => alert(resultMsg), 80);
   } else {
-    const res = document.getElementById('import-result');
-    res.textContent = `Не удалось импортировать ни одной строки (пропущено: ${skipped})`;
+    res.textContent = resultMsg + (skipped ? ` (пропущено: ${skipped})` : '');
     res.className = 'import-result err';
   }
 }
