@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.database import Base, DATABASE_URL, engine, get_db
 from app.models.debt import Debt  # noqa: F401 — ensures debts table is created
 from app.models.user import User
-from app.routers import admin, auth, categories, debts, transactions, users
+from app.routers import admin, ai, auth, categories, debts, transactions, users
 
 HTML_FILE = Path(__file__).parent.parent / "finance-tracker.html"
 
@@ -26,6 +26,7 @@ app.add_middleware(
 )
 
 app.include_router(admin.router)
+app.include_router(ai.router)
 app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(categories.router)

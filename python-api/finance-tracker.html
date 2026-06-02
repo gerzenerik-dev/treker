@@ -2200,18 +2200,16 @@ function getStaticQuote() {
   return QUOTES[getDayOfYear() % QUOTES.length];
 }
 
-function buildQuotePrompt(ctx) {
-  let situation;
-  if (ctx.hasDebts)                          situation = 'у пользователя есть активные долги';
-  else if (ctx.expenses > ctx.income * 0.9) situation = 'расходы превышают или почти равны доходам';
-  else if (ctx.income > ctx.expenses * 1.2) situation = 'баланс активно растёт, доходы значительно выше расходов';
-  else                                        situation = 'стабильная финансовая ситуация';
-  return `Напиши одну краткую мудрую цитату о финансах или мотивации на русском языке для ситуации: ${situation}.
-Формат ответа СТРОГО: "текст цитаты" — Автор
-Цитата — не длиннее 20 слов, вдохновляющая. Отвечай только цитатой, без пояснений.`;
+// Maps financial context object → context key for the /ai/quote proxy
+function quoteContext(s) {
+  if (s.hasDebts)                    return 'debts';
+  if (s.expenses > s.income * 0.9)  return 'saving';
+  if (s.income   > s.expenses * 1.2) return 'success';
+  return 'general';
 }
 
-async function fetchAiQuote(ctx) {
+// Calls the backend proxy — API key never leaves the server
+async function fetchAiQuote(context) {
   const today    = new Date().toISOString().slice(0, 10);
   const username = currentUser?.username || 'guest';
   const cacheKey = `fin_ai_quote_${username}_${today}`;
@@ -2219,27 +2217,18 @@ async function fetchAiQuote(ctx) {
   if (cached) return cached;
 
   try {
-    const controller = new AbortController();
-    const tid = setTimeout(() => controller.abort(), 3000);
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const ctrl = new AbortController();
+    setTimeout(() => ctrl.abort(), 5000);
+    const r = await fetch('/ai/quote', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 150,
-        messages: [{ role: 'user', content: buildQuotePrompt(ctx) }]
-      }),
-      signal: controller.signal
+      headers: authHeaders(),
+      body: JSON.stringify({ context }),
+      signal: ctrl.signal
     });
-    clearTimeout(tid);
-    if (!resp.ok) return null;
-    const data   = await resp.json();
-    const text   = data?.content?.[0]?.text?.trim();
-    if (!text) return null;
-    const m      = text.match(/^"(.+?)"\s*[—–-]\s*(.+)$/s);
-    const result = m ? { text: m[1].trim(), author: m[2].trim() } : { text, author: 'Claude AI' };
-    lsSet(cacheKey, result);
-    return result;
+    if (!r.ok) return null;
+    const quote = await r.json();
+    lsSet(cacheKey, quote);
+    return quote;
   } catch {
     return null;
   }
@@ -2259,14 +2248,15 @@ function setQuoteContent(el, q) {
 async function loadDailyQuote() {
   const el = document.getElementById('hero-quote-block');
   if (!el) return;
-  // Show static quote immediately
+  // Show static quote immediately — always visible while AI call is in-flight
   setQuoteContent(el, getStaticQuote());
-  // Try to upgrade with AI-personalized quote
-  const ctx = {
-    income:   calcSummary(txns).income,
-    expenses: calcSummary(txns).expenses,
+  // Try to upgrade with AI-personalized quote via backend proxy
+  const s   = calcSummary(txns);
+  const ctx = quoteContext({
+    income:   s.income,
+    expenses: s.expenses,
     hasDebts: debtsSummary.total_owed_by_me > 0 || debtsSummary.total_owed_to_me > 0
-  };
+  });
   const aiQ = await fetchAiQuote(ctx);
   if (aiQ && document.getElementById('hero-quote-block')) setQuoteContent(el, aiQ);
 }
