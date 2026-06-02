@@ -2081,7 +2081,9 @@ function calcBreakdown(arr) {
 // ═══════════════════════════════════════════════════════════
 function renderHero(s) {
   const d = debtsSummary;
-  let balance = s.balance;
+  // Balance always reflects ALL time — never affected by period/type/category filters
+  const totalSummary = calcSummary(txns);
+  let balance = totalSummary.balance;
   if (debtsInBalance) balance = balance - d.total_owed_by_me + d.total_owed_to_me;
   const neg = balance < 0;
   const showDebtsRow  = d.total_owed_by_me > 0 || d.total_owed_to_me > 0;
