@@ -1670,7 +1670,7 @@ function recalcLocalDebtSummary() {
 //  REFRESH — pull latest data from API and re-render
 // ═══════════════════════════════════════════════════════════
 async function refreshData() {
-  if (!currentUser?.token) return;
+  if (!currentUser?.token) { console.log('[refresh] no token, skipping'); return; }
   const badge = document.getElementById('api-badge');
   if (badge) badge.title = 'Last refresh: ' + new Date().toLocaleTimeString();
   try {
