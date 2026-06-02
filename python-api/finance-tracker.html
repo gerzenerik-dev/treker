@@ -1319,6 +1319,72 @@
     .analytics-forecast-sub  { font-size: 13px; font-weight: 600; line-height: 1.4; margin-top: 4px; }
     .analytics-forecast-sub.pos { color: var(--income);  }
     .analytics-forecast-sub.neg { color: var(--expense); }
+
+    /* ── Goals card ── */
+    .goals-card-header { padding: 16px 20px 0; display: flex; align-items: center; justify-content: space-between; }
+    .goals-card-header-lbl { font-size: 12px; font-weight: 600; color: var(--secondary); text-transform: uppercase; letter-spacing: 0.06em; }
+    .goals-add-btn { background: var(--accent); color: #fff; border: none; border-radius: 7px; padding: 4px 10px; font-family: var(--font); font-size: 12px; font-weight: 600; cursor: pointer; transition: opacity 0.15s; }
+    .goals-add-btn:hover { opacity: 0.85; }
+    .goals-body { padding: 10px 16px 4px; display: flex; flex-direction: column; gap: 14px; }
+    .goals-empty { font-size: 13px; color: var(--secondary); padding: 6px 0 2px; }
+    .goal-item  { display: flex; flex-direction: column; gap: 5px; }
+    .goal-header { display: flex; align-items: center; justify-content: space-between; }
+    .goal-name  { font-size: 14px; font-weight: 500; color: var(--text); }
+    .goal-del-btn { background: none; border: none; font-size: 17px; line-height: 1; color: var(--secondary); cursor: pointer; padding: 0 2px; border-radius: 4px; transition: color 0.15s; }
+    .goal-del-btn:hover { color: var(--expense); }
+    .goal-amounts { font-size: 12px; color: var(--secondary); }
+    .goal-progress-track { height: 6px; background: rgba(0,0,0,0.06); border-radius: 3px; overflow: hidden; }
+    .goal-progress-fill  { height: 100%; border-radius: 3px; background: var(--accent); transition: width 0.35s cubic-bezier(.4,0,.2,1); }
+    .goal-status-done    { font-size: 12px; font-weight: 600; color: var(--income); }
+    .goal-status-overdue { font-size: 12px; font-weight: 600; color: var(--expense); }
+    .goal-days-left      { font-size: 12px; color: var(--secondary); }
+
+    /* ── Limits section (inside Goals card) ── */
+    .goals-limits-section { padding: 10px 16px 16px; border-top: 1px solid var(--border); margin-top: 6px; }
+    .goals-limits-header  { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .goals-lbl { font-size: 10px; font-weight: 600; color: var(--secondary); text-transform: uppercase; letter-spacing: 0.06em; }
+    .goals-add-limit-btn { background: none; border: 1px solid var(--border); border-radius: 7px; padding: 3px 8px; font-family: var(--font); font-size: 11px; font-weight: 500; color: var(--secondary); cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+    .goals-add-limit-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .limit-item   { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+    .limit-item:last-child { margin-bottom: 0; }
+    .limit-header { display: flex; align-items: center; justify-content: space-between; }
+    .limit-cat-name { font-size: 13px; font-weight: 500; color: var(--text); }
+    .limit-del-btn { background: none; border: none; font-size: 16px; line-height: 1; color: var(--secondary); cursor: pointer; padding: 0 2px; border-radius: 4px; transition: color 0.15s; }
+    .limit-del-btn:hover { color: var(--expense); }
+    .limit-amounts { font-size: 12px; color: var(--secondary); }
+    .limit-track  { height: 6px; background: rgba(0,0,0,0.06); border-radius: 3px; overflow: hidden; }
+    .limit-fill   { height: 100%; border-radius: 3px; transition: width 0.35s cubic-bezier(.4,0,.2,1); }
+    .limit-fill-green  { background: var(--income); }
+    .limit-fill-yellow { background: var(--warn); }
+    .limit-fill-red    { background: var(--expense); }
+
+    /* ── Limit warning banner (hero card) ── */
+    .limit-warning-banner { font-size: 12px; font-weight: 500; color: var(--expense); background: rgba(255,59,48,0.08); border-radius: 8px; padding: 7px 12px; margin: 8px 0 -2px; }
+
+    /* ── Breakdown: limit-colored progress bars ── */
+    .bar-fill.limit-green  { background: var(--income); }
+    .bar-fill.limit-yellow { background: var(--warn); }
+    .bar-fill.limit-red    { background: var(--expense); }
+
+    /* ── Debt modal select (used in limit modal) ── */
+    .debt-modal-fields select {
+      width: 100%; border: 1.5px solid var(--border); border-radius: 10px;
+      padding: 10px 32px 10px 13px; font-family: var(--font); font-size: 15px;
+      color: var(--text); background: var(--bg); outline: none;
+      appearance: none; -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2386868b' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center;
+      transition: border-color 0.15s, box-shadow 0.15s; cursor: pointer;
+    }
+    .debt-modal-fields select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,122,255,0.12); }
+
+    /* ── Dark theme additions ── */
+    html[data-theme="dark"] .goal-progress-track,
+    html[data-theme="dark"] .limit-track { background: rgba(255,255,255,0.08); }
+    html[data-theme="dark"] .limit-warning-banner { background: rgba(255,69,58,0.12); }
+    html[data-theme="dark"] .debt-modal-fields select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2398989d' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    }
   </style>
 </head>
 <body>
@@ -1389,6 +1455,15 @@
         </div>
         <div class="debt-list" id="debt-list"></div>
       </div>
+    </div>
+
+    <div class="card" id="goals-card">
+      <div class="goals-card-header">
+        <span class="goals-card-header-lbl">Цели</span>
+        <button class="goals-add-btn" id="goals-add-btn" onclick="openGoalModal()">+ Добавить</button>
+      </div>
+      <div id="goals-body" class="goals-body"></div>
+      <div id="goals-limits-wrap"></div>
     </div>
 
     <div class="card">
@@ -1502,6 +1577,41 @@
     <div class="modal-btns" style="margin-top:20px;">
       <button class="modal-btn-skip" onclick="closeImportModal()">Отмена</button>
       <button class="modal-btn-save" id="import-do-btn" onclick="doImport()" style="display:none;">Импортировать</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--  GOAL MODAL                                 -->
+<!-- ═══════════════════════════════════════════ -->
+<div id="goal-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.36);z-index:500;display:none;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);">
+  <div class="modal-card">
+    <p class="modal-title" id="goal-modal-title">Новая цель</p>
+    <div class="debt-modal-fields">
+      <input id="gm-name"   type="text"   placeholder="Название цели"         autocomplete="off" />
+      <input id="gm-amount" type="number" inputmode="numeric" placeholder="Целевая сумма, ₽" min="1" step="1" />
+      <input id="gm-date"   type="date" />
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn-skip" onclick="closeGoalModal()">Отмена</button>
+      <button class="modal-btn-save" onclick="saveGoal()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!--  LIMIT MODAL                                -->
+<!-- ═══════════════════════════════════════════ -->
+<div id="limit-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.36);z-index:500;display:none;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);">
+  <div class="modal-card">
+    <p class="modal-title">Лимит по категории</p>
+    <div class="debt-modal-fields">
+      <select id="lm-cat"></select>
+      <input id="lm-amount" type="number" inputmode="numeric" placeholder="Лимит в месяц, ₽" min="1" step="1" />
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn-skip" onclick="closeLimitModal()">Отмена</button>
+      <button class="modal-btn-save" onclick="saveLimit()">Сохранить</button>
     </div>
   </div>
 </div>
@@ -1683,6 +1793,7 @@ function loadLocalData() {
   debtsInBalance = lsGet(`fin_debts_in_balance_${currentUser.username}`) === true;
   loadLocalDebts();
   recalcLocalDebtSummary();
+  loadLocalGoals();
 }
 
 function saveLocalData() {
@@ -1826,6 +1937,239 @@ function recalcLocalDebtSummary() {
     else                              { ttm += d.amount; ctm++; }
   });
   debtsSummary = { total_owed_by_me: tbm, total_owed_to_me: ttm, count_owed_by_me: cbm, count_owed_to_me: ctm };
+}
+
+// ═══════════════════════════════════════════════════════════
+//  GOALS & LIMITS — STATE, STORAGE, UTILS
+// ═══════════════════════════════════════════════════════════
+let goals         = [];
+let catLimits     = {};       // { categoryName: limitAmount }
+let editingGoalId = null;     // null = creating new goal
+let limitModalCat = null;     // category being edited in limit modal
+
+function loadLocalGoals() {
+  goals     = lsGet(`fin_goals_${currentUser.username}`)  || [];
+  catLimits = lsGet(`fin_limits_${currentUser.username}`) || {};
+}
+
+function saveLocalGoals()  { lsSet(`fin_goals_${currentUser.username}`,  goals);     }
+function saveLocalLimits() { lsSet(`fin_limits_${currentUser.username}`, catLimits); }
+
+/** Current-month expense totals per category — used for limit comparison */
+function getMonthCatExpenses() {
+  const now = new Date();
+  const m = now.getMonth(), y = now.getFullYear();
+  const map = {};
+  txns
+    .filter(t => t.category !== INIT_BAL_CATEGORY && t.type === 'expense')
+    .forEach(t => {
+      const d = new Date(t.date + 'T00:00:00');
+      if (d.getMonth() === m && d.getFullYear() === y) {
+        map[t.category] = (map[t.category] || 0) + t.amount;
+      }
+    });
+  return map;
+}
+
+function pluralDays(n) {
+  const a = Math.abs(n);
+  if (a % 10 === 1 && a % 100 !== 11) return 'день';
+  if (a % 10 >= 2 && a % 10 <= 4 && (a % 100 < 10 || a % 100 >= 20)) return 'дня';
+  return 'дней';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  GOALS — RENDER
+// ═══════════════════════════════════════════════════════════
+function renderGoalsCard() {
+  const el = document.getElementById('goals-body');
+  if (!el) return;
+
+  const totalBalance = calcSummary(txns).balance;
+  const addBtn = document.getElementById('goals-add-btn');
+  if (addBtn) addBtn.style.display = goals.length >= 5 ? 'none' : '';
+
+  if (goals.length === 0) {
+    el.innerHTML = `<p class="goals-empty">Нет целей накопления</p>`;
+  } else {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    el.innerHTML = goals.map(g => {
+      const pct = g.targetAmount > 0
+        ? Math.min(Math.round(Math.max(totalBalance, 0) / g.targetAmount * 100), 100)
+        : 0;
+      const targetDate = new Date(g.targetDate + 'T00:00:00');
+      const daysLeft   = Math.ceil((targetDate - today) / 86400000);
+      const isReached  = totalBalance >= g.targetAmount;
+      const isOverdue  = !isReached && daysLeft < 0;
+
+      const statusHtml = isReached
+        ? `<p class="goal-status-done">✓ Цель достигнута!</p>`
+        : isOverdue
+          ? `<p class="goal-status-overdue">Просрочено</p>`
+          : `<p class="goal-days-left">Осталось ${daysLeft} ${pluralDays(daysLeft)}</p>`;
+
+      return `
+        <div class="goal-item">
+          <div class="goal-header">
+            <span class="goal-name">${esc(g.name)}</span>
+            <button class="goal-del-btn" onclick="deleteGoal('${esc(String(g.id))}')">×</button>
+          </div>
+          <p class="goal-amounts">Накоплено: ${fmtNum(Math.max(totalBalance, 0))} из ${fmtNum(g.targetAmount)}</p>
+          <div class="goal-progress-track">
+            <div class="goal-progress-fill" style="width:${pct}%"></div>
+          </div>
+          ${statusHtml}
+        </div>`;
+    }).join('');
+  }
+
+  renderLimitsSection();
+}
+
+function renderLimitsSection() {
+  const wrap = document.getElementById('goals-limits-wrap');
+  if (!wrap) return;
+
+  const monthExp     = getMonthCatExpenses();
+  const limitEntries = Object.entries(catLimits);
+
+  const limitsBody = limitEntries.length === 0
+    ? `<p class="goals-empty" style="margin-bottom:4px;">Лимиты не заданы</p>`
+    : limitEntries.map(([cat, limit]) => {
+        const spent    = monthExp[cat] || 0;
+        const pct      = limit > 0 ? Math.min(Math.round(spent / limit * 100), 100) : 0;
+        const fillCls  = pct >= 90 ? 'limit-fill-red' : pct >= 70 ? 'limit-fill-yellow' : 'limit-fill-green';
+        const exceeded = spent > limit;
+        return `
+          <div class="limit-item">
+            <div class="limit-header">
+              <span class="limit-cat-name">${exceeded ? '⚠️ ' : ''}${esc(cat)}</span>
+              <button class="limit-del-btn" onclick="deleteLimit('${esc(cat)}')">×</button>
+            </div>
+            <p class="limit-amounts">${fmtNum(spent)} / ${fmtNum(limit)}</p>
+            <div class="limit-track">
+              <div class="limit-fill ${fillCls}" style="width:${pct}%"></div>
+            </div>
+          </div>`;
+      }).join('');
+
+  wrap.innerHTML = `
+    <div class="goals-limits-section">
+      <div class="goals-limits-header">
+        <span class="goals-lbl">Лимиты по категориям</span>
+        <button class="goals-add-limit-btn" onclick="openLimitModal()">+ Добавить</button>
+      </div>
+      ${limitsBody}
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  GOALS — CRUD
+// ═══════════════════════════════════════════════════════════
+function openGoalModal(id) {
+  editingGoalId = id || null;
+  const g = id ? goals.find(x => String(x.id) === String(id)) : null;
+  document.getElementById('goal-modal-title').textContent = g ? 'Изменить цель' : 'Новая цель';
+  document.getElementById('gm-name').value   = g ? g.name         : '';
+  document.getElementById('gm-amount').value = g ? g.targetAmount : '';
+  document.getElementById('gm-date').value   = g ? g.targetDate   : '';
+  document.getElementById('goal-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('gm-name')?.focus(), 60);
+}
+
+function closeGoalModal() {
+  document.getElementById('goal-modal').style.display = 'none';
+  editingGoalId = null;
+}
+
+function saveGoal() {
+  const name         = document.getElementById('gm-name').value.trim();
+  const targetAmount = parseFloat(document.getElementById('gm-amount').value);
+  const targetDate   = document.getElementById('gm-date').value;
+
+  const flashRed = id => {
+    const el = document.getElementById(id);
+    el.style.borderColor = 'var(--expense)';
+    el.focus();
+    setTimeout(() => { el.style.borderColor = ''; }, 1200);
+  };
+  if (!name)                              { flashRed('gm-name');   return; }
+  if (!targetAmount || targetAmount <= 0) { flashRed('gm-amount'); return; }
+  if (!targetDate)                        { flashRed('gm-date');   return; }
+
+  if (editingGoalId) {
+    goals = goals.map(g => String(g.id) === String(editingGoalId)
+      ? { ...g, name, targetAmount: Math.round(targetAmount), targetDate }
+      : g);
+  } else {
+    if (goals.length >= 5) return;
+    goals.push({ id: uid(), name, targetAmount: Math.round(targetAmount), targetDate });
+  }
+
+  saveLocalGoals();
+  closeGoalModal();
+  renderGoalsCard();
+  lucide.createIcons();
+}
+
+function deleteGoal(id) {
+  goals = goals.filter(g => String(g.id) !== String(id));
+  saveLocalGoals();
+  renderGoalsCard();
+  lucide.createIcons();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  LIMITS — CRUD
+// ═══════════════════════════════════════════════════════════
+function openLimitModal(catName) {
+  limitModalCat = catName || null;
+  const allExpCats = [...new Set([
+    ...EXP_CATS,
+    ...txns.filter(t => t.type === 'expense' && t.category !== INIT_BAL_CATEGORY).map(t => t.category),
+  ])];
+  const sel = document.getElementById('lm-cat');
+  sel.innerHTML = allExpCats
+    .map(c => `<option value="${esc(c)}"${c === catName ? ' selected' : ''}>${esc(c)}</option>`)
+    .join('');
+  document.getElementById('lm-amount').value = catName && catLimits[catName] ? catLimits[catName] : '';
+  document.getElementById('limit-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('lm-amount')?.focus(), 60);
+}
+
+function closeLimitModal() {
+  document.getElementById('limit-modal').style.display = 'none';
+  limitModalCat = null;
+}
+
+function saveLimit() {
+  const cat    = document.getElementById('lm-cat').value;
+  const amount = parseFloat(document.getElementById('lm-amount').value);
+
+  if (!amount || amount <= 0) {
+    const el = document.getElementById('lm-amount');
+    el.style.borderColor = 'var(--expense)';
+    el.focus();
+    setTimeout(() => { el.style.borderColor = ''; }, 1200);
+    return;
+  }
+
+  catLimits = { ...catLimits, [cat]: Math.round(amount) };
+  saveLocalLimits();
+  closeLimitModal();
+  renderGoalsCard();
+  renderAll();
+  lucide.createIcons();
+}
+
+function deleteLimit(cat) {
+  const updated = { ...catLimits };
+  delete updated[cat];
+  catLimits = updated;
+  saveLocalLimits();
+  renderGoalsCard();
+  renderAll();
+  lucide.createIcons();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2056,6 +2400,8 @@ function logout() {
   debts          = [];
   debtsSummary   = { total_owed_by_me: 0, total_owed_to_me: 0, count_owed_by_me: 0, count_owed_to_me: 0 };
   debtsInBalance = false;
+  goals          = [];
+  catLimits      = {};
   setApiMode(false);
   showAuthScreen();
 }
@@ -2073,6 +2419,8 @@ function handleUnauthorized(msg) {
   debts          = [];
   debtsSummary   = { total_owed_by_me: 0, total_owed_to_me: 0, count_owed_by_me: 0, count_owed_to_me: 0 };
   debtsInBalance = false;
+  goals          = [];
+  catLimits      = {};
   setApiMode(false);
   showAuthScreen();
   // Show session-expired notice — renderAuthForm() runs inside showAuthScreen(), wait a tick
@@ -2094,6 +2442,7 @@ function showAuthScreen() {
 
 function showMainApp(username) {
   document.getElementById('auth-overlay').style.display = 'none';
+  loadLocalGoals(); // goals & limits are always local, regardless of API mode
 
   const chip = document.getElementById('user-chip');
   chip.textContent   = username;
@@ -2324,6 +2673,16 @@ function renderHero(s) {
   const neg = balance < 0;
   const showDebtsRow  = d.total_owed_by_me > 0 || d.total_owed_to_me > 0;
   const showDebtHint  = debtsInBalance && (d.total_owed_by_me > 0 || d.total_owed_to_me > 0);
+
+  // Limit warning banner — show exceeded categories
+  const monthExp     = getMonthCatExpenses();
+  const exceededCats = Object.entries(catLimits)
+    .filter(([cat, lim]) => (monthExp[cat] || 0) > lim)
+    .map(([cat]) => cat);
+  const limitBannerHtml = exceededCats.length > 0
+    ? `<div class="limit-warning-banner">⚠️ Превышен лимит: ${exceededCats.slice(0, 2).map(c => esc(c)).join(', ')}</div>`
+    : '';
+
   document.getElementById('hero-card').innerHTML = `
     <div class="hero">
       <p class="hero-label">Баланс</p>
@@ -2353,6 +2712,7 @@ function renderHero(s) {
           <p class="hero-card-val">${fmtNum(d.total_owed_to_me)}</p>
         </div>
       </div>` : ''}
+      ${limitBannerHtml}
       <hr class="hero-quote-divider">
       <div class="hero-quote-block" id="hero-quote-block">
         <div class="hero-quote-icon"><i data-lucide="sparkles"></i></div>
@@ -2511,23 +2871,42 @@ function renderBreakdown(items) {
     el.innerHTML = `<div class="empty">Нет данных для выбранного периода</div>`;
     return;
   }
+  const monthExp = getMonthCatExpenses();
   el.innerHTML = items.map(item => {
-    const icon = ICONS[item.category] || 'circle-dot';
-    const cls  = item.type === 'income' ? 'inc' : 'exp';
+    const icon  = ICONS[item.category] || 'circle-dot';
+    const cls   = item.type === 'income' ? 'inc' : 'exp';
+    const limit = item.type === 'expense' ? (catLimits[item.category] || 0) : 0;
+    const monthSpent = monthExp[item.category] || 0;
+    const limitPct   = limit > 0 ? Math.min(Math.round(monthSpent / limit * 100), 100) : 0;
+    const exceeded   = limit > 0 && monthSpent > limit;
+
+    const catLabel   = `${exceeded ? '⚠️ ' : ''}${esc(item.category)}`;
+    const amountHtml = limit > 0
+      ? `<span class="bd-amount">${fmtNum(monthSpent)} / ${fmtNum(limit)}</span>`
+      : `<span class="bd-amount">${fmtNum(item.total)}</span>`;
+
+    let barFillCls = 'bar-fill';
+    if (item.type === 'income') {
+      barFillCls += ' inc';
+    } else if (limit > 0) {
+      barFillCls += limitPct >= 90 ? ' limit-red' : limitPct >= 70 ? ' limit-yellow' : ' limit-green';
+    }
+    const barPct = limit > 0 ? limitPct : item.pct;
+
     return `
       <div class="bd-item">
         <div class="bd-row">
           <span class="bd-name">
             <span class="bd-icon ${cls}"><i data-lucide="${icon}"></i></span>
-            ${esc(item.category)}
+            ${catLabel}
           </span>
           <span class="bd-right">
             <span class="bd-pct">${item.pct}%</span>
-            <span class="bd-amount">${fmtNum(item.total)}</span>
+            ${amountHtml}
           </span>
         </div>
         <div class="bar-track">
-          <div class="bar-fill${item.type==='income'?' inc':''}" style="width:${item.pct}%"></div>
+          <div class="${barFillCls}" style="width:${barPct}%"></div>
         </div>
       </div>`;
   }).join('');
@@ -2720,6 +3099,7 @@ function renderAll() {
   renderHero(summary);
   loadDailyQuote();
   renderDebtsCard();
+  renderGoalsCard();
   renderBreakdown(bdwn);
   renderAnalytics();
   renderList(filtered);
@@ -3365,11 +3745,25 @@ document.getElementById('import-modal').addEventListener('click', function(e) {
 });
 // Close on Escape
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeBalanceModal(); closeDebtModal(); closeImportModal(); }
+  if (e.key === 'Escape') { closeBalanceModal(); closeDebtModal(); closeImportModal(); closeGoalModal(); closeLimitModal(); }
 });
 document.getElementById('modal-balance-inp').addEventListener('keydown', e => {
   if (e.key === 'Enter') saveInitialBalance();
 });
+
+// ─── Goal modal events ────────────────────────────────────
+document.getElementById('goal-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeGoalModal();
+});
+['gm-name','gm-amount','gm-date'].forEach(id => {
+  document.getElementById(id)?.addEventListener('keydown', e => { if (e.key === 'Enter') saveGoal(); });
+});
+
+// ─── Limit modal events ───────────────────────────────────
+document.getElementById('limit-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeLimitModal();
+});
+document.getElementById('lm-amount')?.addEventListener('keydown', e => { if (e.key === 'Enter') saveLimit(); });
 
 // ═══════════════════════════════════════════════════════════
 //  VISIBILITY — refresh when tab/window becomes active again
