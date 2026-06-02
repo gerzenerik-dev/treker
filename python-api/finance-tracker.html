@@ -1543,6 +1543,7 @@ function saveLocalData() {
 async function loadApiCategories() {
   try {
     const r = await apiFetch('/categories/', { headers: authHeaders(false) });
+    if (r.status === 401) { const e = new Error('Unauthorized'); e.status = 401; throw e; }
     if (!r.ok) return;
     apiCats     = await r.json();
     catIdToName = {};
@@ -1551,7 +1552,10 @@ async function loadApiCategories() {
       catIdToName[c.id]                  = c.name;
       catNameToId[`${c.type}:${c.name}`] = c.id;
     });
-  } catch { /* ignore — will work without category_id */ }
+  } catch (e) {
+    if (e?.status === 401) throw e; // propagate to caller
+    /* other errors: ignore — will work without category_id */
+  }
 }
 
 async function getOrCreateCategory(name, type) {
@@ -1590,11 +1594,13 @@ function apiTxToLocal(tx) {
 async function loadApiTransactions() {
   try {
     const r = await apiFetch('/transactions/?limit=500', { headers: authHeaders(false) });
+    if (r.status === 401) { const e = new Error('Unauthorized'); e.status = 401; throw e; }
     if (!r.ok) { console.error('[loader] loadApiTransactions non-ok:', r.status); return; }
     const data = await r.json();
     txns = data.map(apiTxToLocal);
     saveLocalData(); // keep local cache in sync
   } catch (e) {
+    if (e?.status === 401) throw e;
     console.error('[loader] loadApiTransactions failed:', e);
     loadLocalData();
     setApiMode(false);
@@ -1621,11 +1627,13 @@ function apiDebtToLocal(d) {
 async function loadApiDebts() {
   try {
     const r = await apiFetch('/debts/?limit=500', { headers: authHeaders(false) });
+    if (r.status === 401) { const e = new Error('Unauthorized'); e.status = 401; throw e; }
     if (!r.ok) { console.error('[loader] loadApiDebts non-ok:', r.status); return; }
     const data = await r.json();
     debts = data.map(apiDebtToLocal);
     saveLocalDebts();
   } catch (e) {
+    if (e?.status === 401) throw e;
     console.error('[loader] loadApiDebts failed:', e);
     loadLocalDebts();
     setApiMode(false);
@@ -1635,6 +1643,7 @@ async function loadApiDebts() {
 async function loadApiDebtSummary() {
   try {
     const r = await apiFetch('/debts/summary', { headers: authHeaders(false) });
+    if (r.status === 401) { const e = new Error('Unauthorized'); e.status = 401; throw e; }
     if (!r.ok) { console.error('[loader] loadApiDebtSummary non-ok:', r.status); return; }
     const data = await r.json();
     debtsSummary = {
@@ -1644,6 +1653,7 @@ async function loadApiDebtSummary() {
       count_owed_to_me: data.count_owed_to_me || 0,
     };
   } catch (e) {
+    if (e?.status === 401) throw e;
     console.error('[loader] loadApiDebtSummary failed:', e);
     recalcLocalDebtSummary();
   }
@@ -1684,6 +1694,10 @@ async function refreshData() {
     renderAll();
     lucide.createIcons();
   } catch (e) {
+    if (e?.status === 401) {
+      handleUnauthorized('Сессия истекла, войдите снова');
+      return;
+    }
     console.error('Refresh failed:', e);
   }
 }
@@ -1892,6 +1906,28 @@ function logout() {
   debtsInBalance = false;
   setApiMode(false);
   showAuthScreen();
+}
+
+// Called whenever any API request returns 401 — clears state and forces re-login
+function handleUnauthorized(msg) {
+  clearInterval(_refreshTimer);
+  _refreshTimer = null;
+  lsSet('fin_session', null);
+  currentUser    = null;
+  txns           = [];
+  apiCats        = [];
+  catIdToName    = {};
+  catNameToId    = {};
+  debts          = [];
+  debtsSummary   = { total_owed_by_me: 0, total_owed_to_me: 0, count_owed_by_me: 0, count_owed_to_me: 0 };
+  debtsInBalance = false;
+  setApiMode(false);
+  showAuthScreen();
+  // Show session-expired notice — renderAuthForm() runs inside showAuthScreen(), wait a tick
+  setTimeout(() => {
+    const el = document.getElementById('auth-err');
+    if (el) el.textContent = msg || 'Сессия истекла, войдите снова';
+  }, 80);
 }
 
 function showAuthScreen() {
@@ -2983,10 +3019,20 @@ async function init() {
     const apiUp = await probeApi();
     if (apiUp) {
       setApiMode(true);
-      await loadApiCategories();
-      await loadApiTransactions();
-      await loadApiDebts();
-      await loadApiDebtSummary();
+      try {
+        await loadApiCategories();
+        await loadApiTransactions();
+        await loadApiDebts();
+        await loadApiDebtSummary();
+      } catch (e) {
+        if (e?.status === 401) {
+          handleUnauthorized('Сессия истекла, войдите снова');
+          return;
+        }
+        // Other error: fall back to local data
+        setApiMode(false);
+        loadLocalData();
+      }
     } else {
       setApiMode(false);
       loadLocalData();
