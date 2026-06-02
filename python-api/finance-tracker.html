@@ -428,6 +428,63 @@
       margin-bottom: 14px;
     }
 
+    /* ── Daily quote ── */
+    .hero-quote-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 14px 0 10px;
+    }
+    .hero-quote-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      opacity: 0;
+      animation: quoteIn 0.5s ease forwards;
+      animation-delay: 0.15s;
+    }
+    @keyframes quoteIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to   { opacity: 1; transform: translateY(0);   }
+    }
+    .hero-quote-icon { display: flex; align-items: center; margin-bottom: 2px; color: var(--secondary); opacity: 0.5; }
+    .hero-quote-icon svg { width: 12px; height: 12px; }
+    .hero-quote-text {
+      font-size: 13px;
+      font-style: italic;
+      color: var(--secondary);
+      text-align: center;
+      line-height: 1.5;
+      padding: 0 4px;
+    }
+    .hero-quote-footer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 2px;
+    }
+    .hero-quote-author {
+      font-size: 11px;
+      color: var(--secondary);
+      opacity: 0.7;
+    }
+    .hero-quote-refresh {
+      background: none;
+      border: none;
+      padding: 2px;
+      cursor: pointer;
+      color: var(--secondary);
+      opacity: 0.45;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.15s;
+    }
+    .hero-quote-refresh:hover { opacity: 0.9; }
+    .hero-quote-refresh svg { width: 10px; height: 10px; }
+
     .theme-toggle-btn {
       background: none;
       border: none;
@@ -1444,6 +1501,60 @@ const ICONS = {
   'Прочее':           'circle-dot',
 };
 
+const QUOTES = [
+  { text: "Богатство — это не то, сколько у тебя есть, а то, сколько ты можешь позволить себе потерять.", author: "Нассим Талеб" },
+  { text: "Не копите деньги — инвестируйте в себя. Самый высокий доход приносит ваш мозг.", author: "Уоррен Баффет" },
+  { text: "Финансовая свобода — это когда ваши активы работают больше, чем вы.", author: "Роберт Кийосаки" },
+  { text: "Экономьте на малом — тратьте на великое.", author: "Народная мудрость" },
+  { text: "Лучшее время посадить дерево было 20 лет назад. Второе лучшее — сегодня.", author: "Китайская пословица" },
+  { text: "Не важно, сколько вы зарабатываете. Важно, сколько вы сохраняете.", author: "Томас Стэнли" },
+  { text: "Деньги — это хороший слуга, но плохой хозяин.", author: "Фрэнсис Бэкон" },
+  { text: "Инвестиции в знания приносят наибольшие проценты.", author: "Бенджамин Франклин" },
+  { text: "Тот, кто хочет быть богатым завтра, должен начать сегодня.", author: "Публилий Сир" },
+  { text: "Маленькие расходы — это большие дыры в кармане.", author: "Бенджамин Франклин" },
+  { text: "Бюджет — это то, что помогает вам жить в пределах ваших средств.", author: "Народная мудрость" },
+  { text: "Самые лучшие инвестиции — это те, что делаются в хорошие времена для защиты от плохих.", author: "Уоррен Баффет" },
+  { text: "Финансовое здоровье начинается с осознанности в расходах.", author: "Дэйв Рэмзи" },
+  { text: "Каждый рубль, который вы сохраняете сегодня, — это два рубля в будущем.", author: "Народная мудрость" },
+  { text: "Долг — это рабство для свободного человека.", author: "Публилий Сир" },
+  { text: "Успех — это всего лишь подготовленность встретить возможность.", author: "Народная мудрость" },
+  { text: "Кто не рискует, тот не пьёт шампанское.", author: "Русская пословица" },
+  { text: "Научитесь экономить, пока не начнёте зарабатывать больше.", author: "Джордж Клейсон" },
+  { text: "Настоящее богатство — это свобода выбирать.", author: "Народная мудрость" },
+  { text: "Трать меньше, чем зарабатываешь — вот весь секрет финансовой мудрости.", author: "Томас Стэнли" },
+  { text: "Богатство строится годами, а разрушается моментально. Берегите то, что создали.", author: "Народная мудрость" },
+  { text: "Цена — это то, что вы платите. Ценность — то, что вы получаете.", author: "Уоррен Баффет" },
+  { text: "Привычка откладывать — это сила, которая создаёт состояния.", author: "Ричард Темплар" },
+  { text: "Живите не по доходам — живите ниже доходов.", author: "Народная мудрость" },
+  { text: "Умный человек учится на ошибках других, мудрый — на своих.", author: "Народная мудрость" },
+  { text: "Финансовый план — это карта к вашей мечте.", author: "Дэйв Рэмзи" },
+  { text: "Не бойтесь медленно идти — бойтесь стоять на месте.", author: "Китайская пословица" },
+  { text: "Деньги не главное в жизни, но занимают почётное второе место.", author: "Мае Уэст" },
+  { text: "Экономия без цели — скупость. Экономия ради цели — мудрость.", author: "Народная мудрость" },
+  { text: "Каждое утро у вас есть выбор: продолжать спать с мечтами или встать и преследовать их.", author: "Народная мудрость" },
+  { text: "Финансовая независимость — это когда вы работаете потому, что хотите, а не потому что вынуждены.", author: "Народная мудрость" },
+  { text: "Купить то, что не нужно — значит продать то, что нужно.", author: "Бенджамин Франклин" },
+  { text: "Хорошие финансовые привычки — лучшее наследство, которое можно оставить детям.", author: "Народная мудрость" },
+  { text: "Богатый думает о вложениях, бедный — о расходах.", author: "Роберт Кийосаки" },
+  { text: "Контроль над расходами важнее контроля над доходами.", author: "Томас Стэнли" },
+  { text: "Первый шаг к богатству — перестать тратить больше, чем зарабатываешь.", author: "Народная мудрость" },
+  { text: "Деньги — это инструмент. Как любой инструмент, они опасны в неумелых руках.", author: "Айн Рэнд" },
+  { text: "Терпение — это самая прибыльная инвестиция.", author: "Народная мудрость" },
+  { text: "Стресс от долгов дороже самих долгов.", author: "Народная мудрость" },
+  { text: "Финансовая грамотность — это не роскошь, это необходимость.", author: "Дэйв Рэмзи" },
+  { text: "Малые суммы, вложенные регулярно, создают большие состояния.", author: "Бенджамин Франклин" },
+  { text: "Лучше иметь немного и быть свободным, чем много и быть в долгах.", author: "Народная мудрость" },
+  { text: "Ваш доход определяет образ жизни сейчас. Ваши инвестиции — образ жизни на пенсии.", author: "Народная мудрость" },
+  { text: "Не ждите идеального момента — начинайте сейчас с того, что у вас есть.", author: "Народная мудрость" },
+  { text: "Сложные проценты — восьмое чудо света. Кто понимает их — зарабатывает, кто нет — платит.", author: "Альберт Эйнштейн" },
+  { text: "Дисциплина в расходах — это форма самоуважения.", author: "Народная мудрость" },
+  { text: "Финансовая уверенность строится годами правильных решений.", author: "Народная мудрость" },
+  { text: "Жить по средствам — это не ограничение, это свобода.", author: "Народная мудрость" },
+  { text: "Каждый потраченный рубль — это голосование за то, каким вы хотите видеть своё будущее.", author: "Народная мудрость" },
+  { text: "Деньги любят тишину и счёт.", author: "Народная мудрость" },
+  { text: "Думать о деньгах — не стыдно. Не думать о деньгах — дорого.", author: "Народная мудрость" },
+];
+
 // ═══════════════════════════════════════════════════════════
 //  STATE
 // ═══════════════════════════════════════════════════════════
@@ -2077,6 +2188,100 @@ function calcBreakdown(arr) {
 }
 
 // ═══════════════════════════════════════════════════════════
+//  DAILY QUOTE
+// ═══════════════════════════════════════════════════════════
+function getDayOfYear() {
+  const now   = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  return Math.floor((now - start) / 86400000);
+}
+
+function getStaticQuote() {
+  return QUOTES[getDayOfYear() % QUOTES.length];
+}
+
+function buildQuotePrompt(ctx) {
+  let situation;
+  if (ctx.hasDebts)                          situation = 'у пользователя есть активные долги';
+  else if (ctx.expenses > ctx.income * 0.9) situation = 'расходы превышают или почти равны доходам';
+  else if (ctx.income > ctx.expenses * 1.2) situation = 'баланс активно растёт, доходы значительно выше расходов';
+  else                                        situation = 'стабильная финансовая ситуация';
+  return `Напиши одну краткую мудрую цитату о финансах или мотивации на русском языке для ситуации: ${situation}.
+Формат ответа СТРОГО: "текст цитаты" — Автор
+Цитата — не длиннее 20 слов, вдохновляющая. Отвечай только цитатой, без пояснений.`;
+}
+
+async function fetchAiQuote(ctx) {
+  const today    = new Date().toISOString().slice(0, 10);
+  const username = currentUser?.username || 'guest';
+  const cacheKey = `fin_ai_quote_${username}_${today}`;
+  const cached   = lsGet(cacheKey);
+  if (cached) return cached;
+
+  try {
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), 3000);
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 150,
+        messages: [{ role: 'user', content: buildQuotePrompt(ctx) }]
+      }),
+      signal: controller.signal
+    });
+    clearTimeout(tid);
+    if (!resp.ok) return null;
+    const data   = await resp.json();
+    const text   = data?.content?.[0]?.text?.trim();
+    if (!text) return null;
+    const m      = text.match(/^"(.+?)"\s*[—–-]\s*(.+)$/s);
+    const result = m ? { text: m[1].trim(), author: m[2].trim() } : { text, author: 'Claude AI' };
+    lsSet(cacheKey, result);
+    return result;
+  } catch {
+    return null;
+  }
+}
+
+function setQuoteContent(el, q) {
+  const textEl   = el.querySelector('.hero-quote-text');
+  const authorEl = el.querySelector('.hero-quote-author');
+  if (textEl)   textEl.textContent   = `«${q.text}»`;
+  if (authorEl) authorEl.textContent = `— ${q.author}`;
+  // Re-trigger fade-in animation
+  el.style.animation = 'none';
+  void el.offsetWidth; // force reflow
+  el.style.animation = '';
+}
+
+async function loadDailyQuote() {
+  const el = document.getElementById('hero-quote-block');
+  if (!el) return;
+  // Show static quote immediately
+  setQuoteContent(el, getStaticQuote());
+  // Try to upgrade with AI-personalized quote
+  const ctx = {
+    income:   calcSummary(txns).income,
+    expenses: calcSummary(txns).expenses,
+    hasDebts: debtsSummary.total_owed_by_me > 0 || debtsSummary.total_owed_to_me > 0
+  };
+  const aiQ = await fetchAiQuote(ctx);
+  if (aiQ && document.getElementById('hero-quote-block')) setQuoteContent(el, aiQ);
+}
+
+async function refreshDailyQuote() {
+  const today    = new Date().toISOString().slice(0, 10);
+  const username = currentUser?.username || 'guest';
+  lsSet(`fin_ai_quote_${username}_${today}`, null);
+  const btn = document.querySelector('.hero-quote-refresh');
+  if (btn) { btn.style.opacity = '0.2'; btn.style.pointerEvents = 'none'; }
+  await loadDailyQuote();
+  if (btn) { btn.style.opacity = ''; btn.style.pointerEvents = ''; }
+}
+
+// ═══════════════════════════════════════════════════════════
 //  RENDER — HERO
 // ═══════════════════════════════════════════════════════════
 function renderHero(s) {
@@ -2117,6 +2322,15 @@ function renderHero(s) {
           <p class="hero-card-val">${fmtNum(d.total_owed_to_me)}</p>
         </div>
       </div>` : ''}
+      <hr class="hero-quote-divider">
+      <div class="hero-quote-block" id="hero-quote-block">
+        <div class="hero-quote-icon"><i data-lucide="sparkles"></i></div>
+        <p class="hero-quote-text">…</p>
+        <div class="hero-quote-footer">
+          <span class="hero-quote-author"></span>
+          <button class="hero-quote-refresh" onclick="refreshDailyQuote()" title="Обновить цитату"><i data-lucide="refresh-cw"></i></button>
+        </div>
+      </div>
     </div>`;
 }
 
@@ -2331,6 +2545,7 @@ function renderAll() {
   const bdwn     = calcBreakdown(filtered);
 
   renderHero(summary);
+  loadDailyQuote();
   renderDebtsCard();
   renderBreakdown(bdwn);
   renderList(filtered);
