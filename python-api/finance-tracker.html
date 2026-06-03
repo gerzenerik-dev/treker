@@ -2548,14 +2548,27 @@ function todayStr() { return new Date().toISOString().split('T')[0]; }
 
 function inPeriod(dateStr, period) {
   if (period === 'all') return true;
-  const d   = new Date(dateStr + 'T00:00:00');
-  const now = new Date();
+  if (!dateStr) return false;
+  // Parse as local date by appending T00:00:00 only if it's a plain YYYY-MM-DD string
+  const normalized = /^\d{4}-\d{2}-\d{2}$/.test(String(dateStr))
+    ? String(dateStr) + 'T00:00:00'
+    : String(dateStr);
+  const d = new Date(normalized);
+  if (isNaN(d.getTime())) return false;
+  const now  = new Date();
+  const nowY = now.getFullYear();
+  const nowM = now.getMonth();  // 0-based
+  const nowD = now.getDate();
   if (period === 'week') {
-    const s = new Date(now); s.setDate(now.getDate() - 7); s.setHours(0,0,0,0);
-    return d >= s;
+    const weekAgo = new Date(nowY, nowM, nowD - 7); // 7 calendar days ago, local midnight
+    return d >= weekAgo;
   }
-  if (period === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-  if (period === 'year')  return d.getFullYear() === now.getFullYear();
+  if (period === 'month') {
+    return d.getFullYear() === nowY && d.getMonth() === nowM;
+  }
+  if (period === 'year') {
+    return d.getFullYear() === nowY;
+  }
   return true;
 }
 
@@ -2873,7 +2886,7 @@ function renderFilters() {
     <div class="filter-row">
       <p class="filter-lbl">Период</p>
       <div class="pills">
-        ${periods.map(([v,l])=>`<button class="pill${filters.period===v?' on':''}" onclick="setFilter('period','${v}')">${l}</button>`).join('')}
+        ${periods.map(([v,l])=>`<button class="pill${filters.period===v?' on':''}" onclick="setPeriod('${v}')">${l}</button>`).join('')}
       </div>
     </div>
     <div class="filter-row">
@@ -3138,8 +3151,15 @@ function renderAll() {
   renderAnalytics();
   renderList(filtered);
 
-  document.getElementById('tx-count').textContent =
-    txns.length > 0 ? txns.length + ' операций' : '';
+  // Show filtered count so the user sees the period filter is active
+  const countEl = document.getElementById('tx-count');
+  if (txns.length === 0) {
+    countEl.textContent = '';
+  } else if (filtered.length === txns.length) {
+    countEl.textContent = txns.length + ' операций';
+  } else {
+    countEl.textContent = filtered.length + ' из ' + txns.length;
+  }
 
   lucide.createIcons();
 }
@@ -3160,6 +3180,14 @@ function setFilter(key, value, noRerenderFilters) {
     renderFilters();
     lucide.createIcons();
   }
+}
+
+// Dedicated period setter — called from the period pill buttons (Неделя / Месяц / Год / Всё время)
+function setPeriod(period) {
+  filters.period = period;
+  renderAll();       // re-renders hero cards, breakdown, and transaction list with new filter
+  renderFilters();   // updates the active state of the pill buttons
+  lucide.createIcons();
 }
 
 async function addTx() {
