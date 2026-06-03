@@ -3392,11 +3392,14 @@ function setPeriod(period) {
 }
 
 function selectChartMonth(y, m) {
-  const from = new Date(y, m, 1);
-  const to   = new Date(y, m + 1, 0);
+  // Build YYYY-MM-DD strings in local time — avoids toISOString() UTC shift
+  // that causes January (month=0) to resolve to Dec 31 of the previous year
+  // in any UTC+ timezone.
+  const pad  = n => String(n).padStart(2, '0');
+  const last = new Date(y, m + 1, 0).getDate(); // last day of this month, local
   filters.period     = 'custom';
-  filters.customFrom = from.toISOString().slice(0, 10);
-  filters.customTo   = to.toISOString().slice(0, 10);
+  filters.customFrom = `${y}-${pad(m + 1)}-01`;
+  filters.customTo   = `${y}-${pad(m + 1)}-${pad(last)}`;
   if (window.innerWidth <= 800) setMobileTab('transactions');
   renderAll();
   renderFilters();
