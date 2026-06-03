@@ -322,26 +322,38 @@
     /* ── Pull-to-refresh indicator ── */
     #ptr-indicator {
       position: fixed;
-      top: 62px;
+      top: 60px;
       left: 50%;
-      transform: translateX(-50%);
+      transform: translateX(-50%) translateY(-80px);
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 20px;
-      padding: 6px 16px;
+      padding: 8px 16px;
       font-family: var(--font);
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 500;
       color: var(--secondary);
-      box-shadow: var(--shadow);
-      z-index: 300;
-      display: none;
+      display: flex;
       align-items: center;
       gap: 6px;
       white-space: nowrap;
       pointer-events: none;
+      box-shadow: var(--shadow);
+      z-index: 2000;
+      opacity: 0;
+      transition: transform 0.25s ease, opacity 0.25s ease;
     }
-    #ptr-indicator.visible { display: flex; }
+    #ptr-indicator svg { width: 14px; height: 14px; flex-shrink: 0; }
+    #ptr-indicator.ptr-pulling,
+    #ptr-indicator.ptr-refreshing {
+      transform: translateX(-50%) translateY(0px);
+      opacity: 1;
+    }
+    @keyframes ptr-spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    .ptr-spinning { animation: ptr-spin 0.8s linear infinite; }
 
     .hero-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
@@ -1540,7 +1552,10 @@
   </div>
 </div>
 
-<div id="ptr-indicator"><i data-lucide="rotate-cw" width="13" height="13"></i> Обновление…</div>
+<div id="ptr-indicator">
+  <i data-lucide="rotate-cw" id="ptr-icon"></i>
+  <span id="ptr-text">Потяните для обновления</span>
+</div>
 
 <div class="layout">
   <aside class="left-panel">
@@ -2631,6 +2646,34 @@ function showMainApp(username) {
 window.addEventListener('resize', () => applyMobileTabVisibility(), { passive: true });
 
 // ═══════════════════════════════════════════════════════════
+//  PULL-TO-REFRESH
+// ═══════════════════════════════════════════════════════════
+function _ptrEl()   { return document.getElementById('ptr-indicator'); }
+function _ptrIcon() { return document.getElementById('ptr-icon'); }
+function _ptrText() { return document.getElementById('ptr-text'); }
+
+function _ptrShow(phase) {
+  const el = _ptrEl();
+  if (phase === 'hide') {
+    el.classList.remove('ptr-pulling', 'ptr-refreshing');
+    _ptrIcon().style.transform = '';
+    _ptrIcon().classList.remove('ptr-spinning');
+    _ptrText().textContent = 'Потяните для обновления';
+    return;
+  }
+  if (phase === 'refreshing') {
+    el.classList.remove('ptr-pulling');
+    el.classList.add('ptr-refreshing');
+    _ptrIcon().style.transform = '';
+    _ptrIcon().classList.add('ptr-spinning');
+    _ptrText().textContent = 'Обновление…';
+    return;
+  }
+  // phase === 'pulling' — called with delta px
+  el.classList.add('ptr-pulling');
+  el.classList.remove('ptr-refreshing');
+}
+
 document.addEventListener('touchstart', e => {
   if (window.scrollY === 0) {
     _ptrStartY = e.touches[0].clientY;
@@ -2639,22 +2682,29 @@ document.addEventListener('touchstart', e => {
 }, { passive: true });
 
 document.addEventListener('touchmove', e => {
-  if (window.scrollY !== 0) return;
+  if (window.scrollY !== 0 || !_ptrStartY) return;
   const delta = e.touches[0].clientY - _ptrStartY;
+  if (delta < 10) return;
+  _ptrShow('pulling');
+  // Rotate icon proportionally; full 180° at 80px pull
+  const deg = Math.min(delta / 80 * 180, 180);
+  _ptrIcon().style.transform = `rotate(${deg}deg)`;
   if (delta >= 80) {
     _ptrActive = true;
-    document.getElementById('ptr-indicator').classList.add('visible');
+    _ptrText().textContent = 'Отпустите для обновления';
+  } else {
+    _ptrActive = false;
+    _ptrText().textContent = 'Потяните для обновления';
   }
 }, { passive: true });
 
 document.addEventListener('touchend', () => {
   if (_ptrActive) {
     _ptrActive = false;
-    refreshData().finally(() => {
-      document.getElementById('ptr-indicator').classList.remove('visible');
-    });
+    _ptrShow('refreshing');
+    refreshData().finally(() => _ptrShow('hide'));
   } else {
-    document.getElementById('ptr-indicator').classList.remove('visible');
+    _ptrShow('hide');
   }
 });
 
@@ -3342,14 +3392,16 @@ function setPeriod(period) {
 }
 
 function selectChartMonth(y, m) {
-  const pad      = n => String(n).padStart(2, '0');
-  const lastDay  = new Date(y, m + 1, 0).getDate();
+  const from = new Date(y, m, 1);
+  const to   = new Date(y, m + 1, 0);
   filters.period     = 'custom';
-  filters.customFrom = `${y}-${pad(m + 1)}-01`;
-  filters.customTo   = `${y}-${pad(m + 1)}-${pad(lastDay)}`;
+  filters.customFrom = from.toISOString().slice(0, 10);
+  filters.customTo   = to.toISOString().slice(0, 10);
+  if (window.innerWidth <= 800) setMobileTab('transactions');
   renderAll();
   renderFilters();
   lucide.createIcons();
+  window.scrollTo(0, 0);
 }
 
 function resetCustomPeriod() {
