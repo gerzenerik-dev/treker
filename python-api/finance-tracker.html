@@ -238,7 +238,7 @@
     /* ── Layout ── */
     .layout {
       display: grid;
-      grid-template-columns: 480px 1fr;
+      grid-template-columns: 420px 1fr;
       gap: 20px;
       max-width: 1380px;
       margin: 0 auto;
@@ -261,7 +261,7 @@
     .left-panel::-webkit-scrollbar-track { background: transparent; }
     .left-panel::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 4px; }
 
-    .right-panel { display: flex; flex-direction: column; gap: 14px; }
+    .right-panel { display: flex; flex-direction: column; gap: 14px; min-width: 320px; }
 
     /* ── Card ── */
     .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); transition: background 0.2s, box-shadow 0.2s; }
@@ -1187,9 +1187,6 @@
       .form-body { grid-template-columns: 1fr 1fr; }
       .btn-add   { grid-column: span 2; }
 
-      .export-btn { bottom: 14px; right: 14px; }
-      .import-btn { bottom: 14px; right: 107px; }
-
       .user-chip { max-width: 80px; }
     }
 
@@ -1400,6 +1397,74 @@
     .sheet-type-badge.skip { background: rgba(0,0,0,0.06);     color: var(--secondary); }
     html[data-theme="dark"] .sheet-selector-row  { background: var(--card); }
     html[data-theme="dark"] .sheet-type-badge.skip { background: rgba(255,255,255,0.07); }
+
+    /* ── Mobile hidden (controlled by setMobileTab) ── */
+    @media (max-width: 800px) {
+      .mobile-hidden { display: none !important; }
+    }
+
+    /* ── Medium screen: tighter card padding (801-1100px) ── */
+    @media (max-width: 1100px) and (min-width: 801px) {
+      .card-header    { padding: 14px 16px 0; }
+      .breakdown-body { padding: 12px 16px 14px; }
+      .analytics-body { padding: 12px 16px 14px; }
+      .hero           { padding: 16px 16px 14px; }
+    }
+
+    /* ── Mobile tab bar ── */
+    .mobile-tabs {
+      display: none; /* hidden on desktop */
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      grid-template-columns: repeat(3, 1fr);
+      z-index: 1000;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      box-shadow: 0 -1px 0 var(--border);
+    }
+
+    .mobile-tab-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      border: none;
+      background: transparent;
+      font-family: var(--font);
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--secondary);
+      cursor: pointer;
+      padding: 0;
+      transition: color 0.15s;
+    }
+
+    .mobile-tab-btn svg { width: 20px; height: 20px; }
+
+    .mobile-tab-btn.active { color: var(--accent); }
+
+    @media (max-width: 800px) {
+      /* Show tab bar on mobile */
+      .mobile-tabs { display: grid; }
+
+      /* Extra bottom padding so content isn't hidden behind tab bar */
+      .layout { padding-bottom: 80px; }
+
+      /* Raise export/import above tab bar */
+      .export-btn { bottom: 70px; }
+      .import-btn { bottom: 70px; }
+    }
+
+    /* ── Dark theme: mobile tab bar ── */
+    html[data-theme="dark"] .mobile-tabs {
+      background: var(--card);
+      border-top-color: var(--border);
+    }
   </style>
 </head>
 <body>
@@ -1441,14 +1506,14 @@
 
 <div class="layout">
   <aside class="left-panel">
-    <div class="card" id="hero-card"></div>
+    <div class="card" id="section-hero"></div>
 
-    <div class="card">
+    <div class="card" id="section-form">
       <div class="card-header">Добавить операцию</div>
       <div class="form-body" id="form-body"></div>
     </div>
 
-    <div class="card" id="debts-card">
+    <div class="card" id="section-debts">
       <div class="debts-card-header">
         <span class="debts-card-header-lbl">Долги и займы</span>
         <div class="debts-header-right">
@@ -1472,7 +1537,7 @@
       </div>
     </div>
 
-    <div class="card" id="goals-card">
+    <div class="card" id="section-goals">
       <div class="goals-card-header">
         <span class="goals-card-header-lbl">Цели</span>
         <button class="goals-add-btn" id="goals-add-btn" onclick="openGoalModal()">+ Добавить</button>
@@ -1481,24 +1546,24 @@
       <div id="goals-limits-wrap"></div>
     </div>
 
-    <div class="card">
+    <div class="card" id="section-filters">
       <div class="card-header">Фильтры</div>
       <div class="filters-body" id="filters-body"></div>
     </div>
   </aside>
 
   <main class="right-panel">
-    <div class="card">
+    <div class="card" id="section-breakdown">
       <div class="card-header">По категориям</div>
       <div class="breakdown-body" id="breakdown-body"></div>
     </div>
 
-    <div class="card">
+    <div class="card" id="section-analytics">
       <div class="card-header">Аналитика</div>
       <div class="analytics-body" id="analytics-body"></div>
     </div>
 
-    <div class="card">
+    <div class="card" id="section-txlist">
       <div class="card-header">Операции</div>
       <div class="tx-list" id="tx-list"></div>
     </div>
@@ -1649,6 +1714,21 @@
   Экспорт
 </button>
 
+<!-- ═══════════════════════════════════════════ -->
+<!--  MOBILE BOTTOM TAB BAR                      -->
+<!-- ═══════════════════════════════════════════ -->
+<nav class="mobile-tabs" id="mobile-tabs">
+  <button class="mobile-tab-btn" onclick="setMobileTab('main')" id="mtab-main">
+    <i data-lucide="wallet"></i><span>Главная</span>
+  </button>
+  <button class="mobile-tab-btn" onclick="setMobileTab('transactions')" id="mtab-transactions">
+    <i data-lucide="list"></i><span>Операции</span>
+  </button>
+  <button class="mobile-tab-btn" onclick="setMobileTab('analytics')" id="mtab-analytics">
+    <i data-lucide="bar-chart-2"></i><span>Аналитика</span>
+  </button>
+</nav>
+
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
 <script>
@@ -1764,6 +1844,7 @@ let editingDebtId   = null;       // null = creating; number = patching
 let debtModalDir    = 'owed_by_me';
 let debtsInBalance  = false;      // whether to subtract/add debts from displayed balance
 let currentTheme    = 'light';    // 'light' | 'dark'
+let mobileTab       = 'main';     // 'main' | 'transactions' | 'analytics'
 let _refreshTimer = null;         // handle for the 30s auto-refresh timer
 let _ptrStartY = 0;
 let _ptrActive = false;
@@ -2488,6 +2569,7 @@ function showMainApp(username) {
   renderForm();
   renderFilters();
   renderAll();
+  setMobileTab(mobileTab); // apply tab visibility (no-op on desktop)
   lucide.createIcons();
 
   startRefreshInterval(); // start (or restart) the 30s auto-refresh
@@ -2499,6 +2581,9 @@ function showMainApp(username) {
 
 // ═══════════════════════════════════════════════════════════
 //  PULL-TO-REFRESH (mobile / iPhone PWA)
+// Re-apply mobile tab visibility on window resize / orientation change
+window.addEventListener('resize', () => applyMobileTabVisibility(), { passive: true });
+
 // ═══════════════════════════════════════════════════════════
 document.addEventListener('touchstart', e => {
   if (window.scrollY === 0) {
@@ -2730,7 +2815,7 @@ function renderHero(s) {
     ? `<div class="limit-warning-banner">⚠️ Превышен лимит: ${exceededCats.slice(0, 2).map(c => esc(c)).join(', ')}</div>`
     : '';
 
-  document.getElementById('hero-card').innerHTML = `
+  document.getElementById('section-hero').innerHTML = `
     <div class="hero">
       <p class="hero-label">Баланс</p>
       <div class="hero-balance-wrap">
@@ -3187,6 +3272,54 @@ function setPeriod(period) {
   filters.period = period;
   renderAll();       // re-renders hero cards, breakdown, and transaction list with new filter
   renderFilters();   // updates the active state of the pill buttons
+  lucide.createIcons();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  MOBILE TAB NAVIGATION
+// ═══════════════════════════════════════════════════════════
+
+// Which sections belong to which tab
+const MOBILE_TAB_SECTIONS = {
+  main:         ['section-hero', 'section-form', 'section-debts', 'section-goals'],
+  transactions: ['section-filters', 'section-breakdown', 'section-txlist'],
+  analytics:    ['section-analytics'],
+};
+const ALL_SECTIONS = ['section-hero','section-form','section-debts','section-goals',
+                      'section-filters','section-breakdown','section-txlist','section-analytics'];
+
+function applyMobileTabVisibility() {
+  const isMobile = window.innerWidth <= 800;
+  if (!isMobile) {
+    // Desktop: show everything, remove hidden class
+    ALL_SECTIONS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('mobile-hidden');
+    });
+    return;
+  }
+  // Mobile: hide all, then show the active tab's sections
+  const visible = MOBILE_TAB_SECTIONS[mobileTab] || MOBILE_TAB_SECTIONS.main;
+  ALL_SECTIONS.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (visible.includes(id)) {
+      el.classList.remove('mobile-hidden');
+    } else {
+      el.classList.add('mobile-hidden');
+    }
+  });
+}
+
+function setMobileTab(tab) {
+  mobileTab = tab;
+  applyMobileTabVisibility();
+  // Update tab button active states
+  ['main', 'transactions', 'analytics'].forEach(t => {
+    const btn = document.getElementById('mtab-' + t);
+    if (btn) btn.classList.toggle('active', t === tab);
+  });
+  window.scrollTo(0, 0);
   lucide.createIcons();
 }
 
