@@ -1385,6 +1385,21 @@
     html[data-theme="dark"] .debt-modal-fields select {
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2398989d' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
     }
+
+    /* ── Import: sheet selector ── */
+    .sheet-selector-rows { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-top: 4px; }
+    .sheet-selector-row  { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-bottom: 1px solid var(--border); background: var(--card); }
+    .sheet-selector-row:last-child { border-bottom: none; }
+    .sheet-selector-row label { display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1; min-width: 0; }
+    .sheet-selector-row input[type=checkbox] { width: 15px; height: 15px; accent-color: var(--accent); flex-shrink: 0; cursor: pointer; }
+    .sheet-sel-name  { font-size: 13px; font-weight: 500; color: var(--text); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sheet-sel-count { font-size: 12px; color: var(--secondary); flex-shrink: 0; margin-left: auto; padding-right: 8px; }
+    .sheet-type-badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 5px; flex-shrink: 0; }
+    .sheet-type-badge.exp  { background: rgba(255,59,48,0.1);  color: var(--expense); }
+    .sheet-type-badge.inc  { background: rgba(52,199,89,0.1);  color: var(--income);  }
+    .sheet-type-badge.skip { background: rgba(0,0,0,0.06);     color: var(--secondary); }
+    html[data-theme="dark"] .sheet-selector-row  { background: var(--card); }
+    html[data-theme="dark"] .sheet-type-badge.skip { background: rgba(255,255,255,0.07); }
   </style>
 </head>
 <body>
@@ -1554,6 +1569,12 @@
     <div id="import-preview-section" style="display:none;">
       <p id="import-row-count" style="font-size:13px;color:var(--secondary);margin-top:12px;margin-bottom:0;"></p>
 
+      <!-- Sheet selector (multi-sheet xlsx only) -->
+      <div id="import-sheet-selector" style="display:none;">
+        <p class="import-section-lbl">Листы файла</p>
+        <div class="sheet-selector-rows" id="import-sheet-rows"></div>
+      </div>
+
       <p class="import-section-lbl">Предпросмотр</p>
       <div class="import-preview-wrap">
         <table class="import-preview-table" id="import-preview-tbl"></table>
@@ -1562,13 +1583,15 @@
       <p class="import-section-lbl">Категории → Категории приложения</p>
       <div class="cat-mapping" id="import-cat-mapping"></div>
 
-      <p class="import-section-lbl">Тип по умолчанию</p>
-      <div class="import-default-type">
-        <div class="type-toggle" style="width:160px;">
-          <button class="type-btn on-exp" id="imp-type-exp" onclick="setImportType('expense')">Расход</button>
-          <button class="type-btn"        id="imp-type-inc" onclick="setImportType('income')">Доход</button>
+      <div id="import-default-type-section">
+        <p class="import-section-lbl">Тип по умолчанию</p>
+        <div class="import-default-type">
+          <div class="type-toggle" style="width:160px;">
+            <button class="type-btn on-exp" id="imp-type-exp" onclick="setImportType('expense')">Расход</button>
+            <button class="type-btn"        id="imp-type-inc" onclick="setImportType('income')">Доход</button>
+          </div>
+          <span>применяется ко всем строкам</span>
         </div>
-        <span>применяется ко всем строкам</span>
       </div>
 
       <p class="import-result" id="import-result"></p>
@@ -1636,7 +1659,7 @@ const API_BASE  = '';
 const API_TIMEOUT = 4000; // ms before falling back to localStorage
 
 const EXP_CATS = ['Продукты','Машина','Квартира','Кафе и рестораны','Развлечения','Одежда','Здоровье','Быт','Дом','Досуг','Интернет','Пожертвования','Такси','Транспорт','Прочее'];
-const INC_CATS = ['Зарплата','Подработка','Прочее'];
+const INC_CATS = ['Зарплата','Подработка','Кешбек','Подарок','Аренда','Фриланс','Прочее'];
 const INIT_BAL_CATEGORY = 'Начальный баланс';
 
 const ICONS = {
@@ -1654,8 +1677,12 @@ const ICONS = {
   'Пожертвования':    'heart-handshake',
   'Такси':            'car-taxi-front',
   'Транспорт':        'bus',
+  'Кешбек':           'percent',
+  'Подарок':          'gift',
+  'Аренда':           'key-round',
+  'Фриланс':          'laptop',
   'Зарплата':         'briefcase',
-  'Подработка':       'laptop',
+  'Подработка':       'pencil-ruler',
   'Прочее':           'circle-dot',
 };
 
@@ -3221,6 +3248,7 @@ function exportJSON() {
 // ═══════════════════════════════════════════════════════════
 //  IMPORT
 // ═══════════════════════════════════════════════════════════
+let importSheets      = [];   // [{ name, type, rows, colMap, checked }] — one per xlsx sheet
 let importParsedRows  = [];
 let importColMap      = {};   // { date, category, amount, comment } → column index
 let importDefaultType = 'expense';
@@ -3234,6 +3262,7 @@ function autoMapCat(name) {
 }
 
 function openImportModal() {
+  importSheets      = [];
   importParsedRows  = [];
   importColMap      = {};
   importDefaultType = 'expense';
@@ -3242,11 +3271,13 @@ function openImportModal() {
   const dz = document.getElementById('import-drop-zone');
   dz.innerHTML = `<i data-lucide="upload-cloud" width="32" height="32" style="display:block;margin:0 auto 10px;"></i><div>Нажмите или перетащите файл сюда</div><div style="font-size:11px;margin-top:4px;opacity:0.65;">.xlsx и .csv</div>`;
   document.getElementById('import-preview-section').style.display = 'none';
+  document.getElementById('import-sheet-selector').style.display = 'none';
   document.getElementById('import-do-btn').style.display = 'none';
   document.getElementById('import-result').textContent = '';
   document.getElementById('import-result').className = 'import-result';
   document.getElementById('imp-type-exp').className = 'type-btn on-exp';
   document.getElementById('imp-type-inc').className = 'type-btn';
+  document.getElementById('import-default-type-section').style.display = '';
   document.getElementById('import-modal').classList.add('open');
   lucide.createIcons();
 }
@@ -3257,6 +3288,10 @@ function closeImportModal() {
 
 function setImportType(type) {
   importDefaultType = type;
+  // Propagate to sheets whose type wasn't determined by their name (CSV / unknown-named sheets)
+  importSheets.forEach(sh => {
+    if (sheetTypeByName(sh.name) === null) sh.type = type;
+  });
   document.getElementById('imp-type-exp').className = 'type-btn' + (type === 'expense' ? ' on-exp' : '');
   document.getElementById('imp-type-inc').className = 'type-btn' + (type === 'income'  ? ' on-inc' : '');
 }
@@ -3282,10 +3317,24 @@ function onImportFileSelected(e) {
 
 // ─── Parsing helpers ──────────────────────────────────────
 function detectHeaderRow(rows) {
-  const kws = ['дата', 'категория', 'сумма', 'date', 'category', 'amount'];
-  for (let i = 0; i < Math.min(5, rows.length); i++) {
+  // Prefer a row containing ALL THREE of: date, category, and amount columns
+  const required = [
+    ['дата', 'date', 'время'],
+    ['категория', 'category'],
+    ['сумма', 'amount', 'sum', 'итого'],
+  ];
+  for (let i = 0; i < Math.min(6, rows.length); i++) {
     const cells = rows[i].map(c => String(c ?? '').toLowerCase());
-    if (kws.some(kw => cells.some(c => c.includes(kw)))) return i;
+    const allMatch = required.every(group =>
+      cells.some(c => group.some(kw => c.includes(kw)))
+    );
+    if (allMatch) return i;
+  }
+  // Fallback: any single date/category/amount keyword (simpler CSV files)
+  const fallback = ['дата', 'категория', 'сумма', 'date', 'category', 'amount'];
+  for (let i = 0; i < Math.min(6, rows.length); i++) {
+    const cells = rows[i].map(c => String(c ?? '').toLowerCase());
+    if (fallback.some(kw => cells.some(c => c.includes(kw)))) return i;
   }
   return 0;
 }
@@ -3296,10 +3345,12 @@ function detectColumns(headers) {
     const i = h.findIndex(cell => kws.some(kw => cell.includes(kw)));
     return i >= 0 ? i : null;
   };
+  // Prefer "сумма в валюте учета" (CoinKeeper/MoneyMoney export) over a plain "Сумма" column
+  const amtIdx = find('валюте учета', 'валюте') ?? find('сумма', 'amount', 'sum', 'итого');
   return {
     date:     find('дата', 'date', 'время'),
     category: find('категория', 'category'),
-    amount:   find('сумма', 'amount', 'sum', 'итого'),
+    amount:   amtIdx,
     comment:  find('комментарий', 'comment', 'описание', 'примечание'),
   };
 }
@@ -3316,40 +3367,137 @@ function parseImportDate(raw) {
   return isNaN(d) ? todayStr() : d.toISOString().split('T')[0];
 }
 
+// ─── Multi-sheet helpers ──────────────────────────────
+function sheetTypeByName(name) {
+  const n = (name || '').toLowerCase().trim();
+  // Guard: check "расход" before "доход"; ensure no overlap via the !includes guard
+  if (n.includes('расход') && !n.includes('доход')) return 'expense';
+  if (n.includes('доход'))                          return 'income';
+  if (n.includes('перевод') || n.includes('перемещ')) return 'skip';
+  return null;
+}
+
+function parseSheetRows(ws) {
+  const raw     = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, dateNF: 'yyyy-mm-dd' });
+  const headerIdx = detectHeaderRow(raw);
+  const headers   = raw[headerIdx] || [];
+  const colMap    = detectColumns(headers);
+  const rows      = raw.slice(headerIdx + 1).filter(row => {
+    if (!row || row.every(c => c === '' || c === null || c === undefined)) return false;
+    if (colMap.amount !== null) {
+      const v = parseFloat(String(row[colMap.amount] ?? '').replace(/[^0-9.,-]/g, '').replace(',', '.'));
+      if (isNaN(v) || v === 0) return false;
+    }
+    return true;
+  });
+  return { colMap, rows };
+}
+
+function renderSheetSelector() {
+  const wrap  = document.getElementById('import-sheet-selector');
+  const rowsEl = document.getElementById('import-sheet-rows');
+  if (importSheets.length <= 1) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  rowsEl.innerHTML = importSheets.map(sh => {
+    const badgeCls = sh.type === 'expense' ? 'exp' : sh.type === 'income' ? 'inc' : 'skip';
+    const badgeTxt = sh.type === 'expense' ? 'Расходы' : sh.type === 'income' ? 'Доходы' : 'Пропустить';
+    const nameAttr = JSON.stringify(sh.name);
+    return `<div class="sheet-selector-row">
+      <label>
+        <input type="checkbox" ${sh.checked ? 'checked' : ''} onchange="toggleSheetChecked(${nameAttr})">
+        <span class="sheet-sel-name">${esc(sh.name)}</span>
+        <span class="sheet-sel-count">${sh.rows.length} строк</span>
+      </label>
+      <span class="sheet-type-badge ${badgeCls}">${badgeTxt}</span>
+    </div>`;
+  }).join('');
+}
+
+function toggleSheetChecked(name) {
+  const sh = importSheets.find(s => s.name === name);
+  if (sh) sh.checked = !sh.checked;
+  _refreshImportAfterToggle();
+}
+
+function _refreshImportAfterToggle() {
+  const enabled = importSheets.filter(s => s.checked && s.type !== 'skip');
+  const total   = enabled.reduce((sum, s) => sum + s.rows.length, 0);
+
+  const allChecked = importSheets.filter(s => s.type !== 'skip');
+  const label = importSheets.length > 1
+    ? `Найдено ${total} строк` +
+      (importSheets.length <= 4
+        ? ' (' + allChecked.map(s => `${esc(s.name)}: ${s.rows.length}`).join(', ') + ')'
+        : '')
+    : `Найдено ${total} строк`;
+  document.getElementById('import-row-count').textContent = label;
+
+  const first = enabled[0];
+  if (first) renderImportPreview(first.colMap, first.rows);
+  renderImportCatMapping();
+
+  const btn = document.getElementById('import-do-btn');
+  if (total > 0) {
+    btn.style.display = '';
+    btn.textContent = `Импортировать (${total} шт.)`;
+  } else {
+    btn.style.display = 'none';
+  }
+}
+
 async function processImportFile(file) {
   const dz = document.getElementById('import-drop-zone');
   dz.textContent = 'Загрузка…';
   try {
     const buf = await file.arrayBuffer();
     const wb  = XLSX.read(buf, { type: 'array', cellDates: true });
-    const ws  = wb.Sheets[wb.SheetNames[0]];
-    const raw = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, dateNF: 'yyyy-mm-dd' });
 
     dz.innerHTML = `<i data-lucide="check-circle" width="20" height="20" style="display:block;margin:0 auto 6px;color:var(--income);"></i><div style="font-weight:500;">${esc(file.name)}</div>`;
     lucide.createIcons();
 
-    const headerIdx = detectHeaderRow(raw);
-    const headers   = raw[headerIdx] || [];
-    importColMap    = detectColumns(headers);
-
-    // Filter valid data rows
-    importParsedRows = raw.slice(headerIdx + 1).filter(row => {
-      if (!row || row.every(c => c === '' || c === null || c === undefined)) return false;
-      if (importColMap.amount !== null) {
-        const v = parseFloat(String(row[importColMap.amount] ?? '').replace(/[^0-9.,-]/g, '').replace(',', '.'));
-        if (isNaN(v) || v === 0) return false;
-      }
-      return true;
+    // Parse every sheet
+    importSheets = wb.SheetNames.map(name => {
+      const { colMap, rows } = parseSheetRows(wb.Sheets[name]);
+      const autoType = sheetTypeByName(name);
+      return { name, type: autoType || 'expense', rows, colMap, checked: autoType !== 'skip' };
     });
 
-    renderImportPreview(headers, importParsedRows);
-    renderImportCatMapping(importParsedRows);
+    // Single-sheet fallback globals (for CSV or 1-sheet xlsx)
+    importColMap     = importSheets[0]?.colMap || {};
+    importParsedRows = importSheets[0]?.rows   || [];
 
-    document.getElementById('import-row-count').textContent = `Найдено ${importParsedRows.length} строк`;
+    renderSheetSelector();
+
+    // Hide the type toggle when ALL sheets have a known type (determined by sheet name),
+    // including single-sheet "Доходы" / "Расходы" files.
+    const multiSheet   = importSheets.length > 1;
+    const allTypesKnown = importSheets.every(s => sheetTypeByName(s.name) !== null);
+    document.getElementById('import-default-type-section').style.display =
+      (multiSheet || allTypesKnown) ? 'none' : '';
+
+    // Preview: first checked (or first) sheet
+    const firstChecked = importSheets.find(s => s.checked) || importSheets[0];
+    if (firstChecked) renderImportPreview(firstChecked.colMap, firstChecked.rows);
+    renderImportCatMapping();
+
+    const enabled = importSheets.filter(s => s.checked && s.type !== 'skip');
+    const total   = enabled.reduce((sum, s) => sum + s.rows.length, 0);
+
+    // Build row-count label: "Найдено 695 строк" or per-sheet breakdown for multi-sheet
+    const rowCountLabel = multiSheet
+      ? `Найдено ${total} строк` +
+        (importSheets.length <= 4
+          ? ' (' + importSheets
+              .filter(s => s.type !== 'skip')
+              .map(s => `${esc(s.name)}: ${s.rows.length}`)
+              .join(', ') + ')'
+          : '')
+      : `Найдено ${total} строк`;
+    document.getElementById('import-row-count').textContent = rowCountLabel;
     document.getElementById('import-preview-section').style.display = '';
     const btn = document.getElementById('import-do-btn');
     btn.style.display = '';
-    btn.textContent = `Импортировать (${importParsedRows.length} шт.)`;
+    btn.textContent = `Импортировать (${total} шт.)`;
 
   } catch (err) {
     dz.innerHTML = `<i data-lucide="alert-circle" width="20" height="20" style="display:block;margin:0 auto 6px;color:var(--expense);"></i><div>Ошибка чтения файла</div><div style="font-size:11px;margin-top:4px;opacity:0.7;">${esc(String(err.message || err))}</div>`;
@@ -3357,26 +3505,41 @@ async function processImportFile(file) {
   }
 }
 
-function renderImportPreview(headers, rows) {
+function renderImportPreview(colMap, rows) {
   const cols = ['date','category','amount','comment']
-    .filter(k => importColMap[k] !== null && importColMap[k] !== undefined);
+    .filter(k => colMap[k] !== null && colMap[k] !== undefined);
   const labels = { date:'Дата', category:'Категория', amount:'Сумма', comment:'Комментарий' };
 
   const thead = `<thead><tr>${cols.map(k => `<th>${labels[k]}</th>`).join('')}</tr></thead>`;
   const tbody = `<tbody>${rows.slice(0,5).map(row =>
-    `<tr>${cols.map(k => `<td>${esc(String(row[importColMap[k]] ?? ''))}</td>`).join('')}</tr>`
+    `<tr>${cols.map(k => `<td>${esc(String(row[colMap[k]] ?? ''))}</td>`).join('')}</tr>`
   ).join('')}</tbody>`;
   document.getElementById('import-preview-tbl').innerHTML = thead + tbody;
 }
 
-function renderImportCatMapping(rows) {
+function renderImportCatMapping() {
   const el = document.getElementById('import-cat-mapping');
-  if (importColMap.category === null || importColMap.category === undefined) {
+
+  // Collect unique categories from all enabled sheets (or single-sheet fallback)
+  const sources = importSheets.length > 0
+    ? importSheets.filter(s => s.checked && s.type !== 'skip')
+    : [{ rows: importParsedRows, colMap: importColMap }];
+
+  const catSet = new Set();
+  for (const src of sources) {
+    if (src.colMap.category === null || src.colMap.category === undefined) continue;
+    src.rows.forEach(r => {
+      const c = String(r[src.colMap.category] ?? '').trim();
+      if (c) catSet.add(c);
+    });
+  }
+
+  if (catSet.size === 0) {
     el.innerHTML = `<p style="font-size:12px;color:var(--secondary);">Колонка «Категория» не найдена — будет использовано «Прочее»</p>`;
     return;
   }
-  const uniq = [...new Set(rows.map(r => String(r[importColMap.category] ?? '').trim()).filter(Boolean))];
-  const opts = ALL_APP_CATS.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+
+  const uniq = [...catSet];
   el.innerHTML = uniq.map(cat => {
     const mapped = autoMapCat(cat);
     return `<div class="cat-map-row">
@@ -3398,27 +3561,36 @@ async function doImport() {
   const catMap = {};
   catMapEls.forEach(sel => { catMap[sel.dataset.src] = sel.value; });
 
+  // Determine which sheets / rows to process
+  const sheetsToImport = importSheets.length > 0
+    ? importSheets.filter(s => s.checked && s.type !== 'skip')
+    : [{ rows: importParsedRows, colMap: importColMap, type: importDefaultType }];
+
   // Build valid rows first (skip unparseable amounts)
   const validRows = [];
   let skipped = 0;
-  for (const row of importParsedRows) {
-    const rawAmt = importColMap.amount !== null ? row[importColMap.amount] : null;
-    if (rawAmt === null || rawAmt === undefined || rawAmt === '') { skipped++; continue; }
-    const amount = Math.round(Math.abs(
-      parseFloat(String(rawAmt).replace(/[^0-9.,-]/g, '').replace(',', '.'))
-    ));
-    if (!amount || isNaN(amount)) { skipped++; continue; }
-    const type     = importDefaultType;
-    const rawCat   = importColMap.category !== null ? String(row[importColMap.category] ?? '').trim() : '';
-    const category = catMap[rawCat] || 'Прочее';
-    const date     = parseImportDate(importColMap.date !== null ? row[importColMap.date] : null);
-    const comment  = importColMap.comment !== null ? String(row[importColMap.comment] ?? '').trim() : '';
-    validRows.push({ type, amount, category, date, comment });
+  for (const sh of sheetsToImport) {
+    for (const row of sh.rows) {
+      const rawAmt = sh.colMap.amount !== null ? row[sh.colMap.amount] : null;
+      if (rawAmt === null || rawAmt === undefined || rawAmt === '') { skipped++; continue; }
+      const amount = Math.round(Math.abs(
+        parseFloat(String(rawAmt).replace(/[^0-9.,-]/g, '').replace(',', '.'))
+      ));
+      if (!amount || isNaN(amount)) { skipped++; continue; }
+      const type     = sh.type;
+      const rawCat   = sh.colMap.category !== null ? String(row[sh.colMap.category] ?? '').trim() : '';
+      const category = catMap[rawCat] || 'Прочее';
+      const date     = parseImportDate(sh.colMap.date !== null ? row[sh.colMap.date] : null);
+      const comment  = sh.colMap.comment !== null ? String(row[sh.colMap.comment] ?? '').trim() : '';
+      validRows.push({ type, amount, category, date, comment });
+    }
   }
+
+  const totalSourceRows = sheetsToImport.reduce((s, sh) => s + sh.rows.length, 0);
 
   if (validRows.length === 0) {
     btn.disabled = false;
-    btn.textContent = `Импортировать (${importParsedRows.length} шт.)`;
+    btn.textContent = `Импортировать (${totalSourceRows} шт.)`;
     res.textContent = `Не удалось импортировать ни одной строки (пропущено: ${skipped})`;
     res.className = 'import-result err';
     return;
@@ -3463,7 +3635,7 @@ async function doImport() {
   }
 
   btn.disabled = false;
-  btn.textContent = `Импортировать (${importParsedRows.length} шт.)`;
+  btn.textContent = `Импортировать (${totalSourceRows} шт.)`;
 
   const resultMsg = failed > 0
     ? `Импортировано: ${succeeded} из ${total}. Ошибок: ${failed}`
