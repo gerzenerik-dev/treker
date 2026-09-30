@@ -64,3 +64,17 @@ def debug_db_info(db: Session = Depends(get_db)) -> dict:
         "db_type": db_type,
         "env_keys": env_keys,
     }
+
+
+# Catch-all: must stay last so it never shadows a more specific route above.
+@app.get("/{full_path:path}")
+def catch_all(full_path: str) -> FileResponse:  # noqa: ARG001
+    return FileResponse(
+        HTML_FILE,
+        media_type="text/html",
+        headers={
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
