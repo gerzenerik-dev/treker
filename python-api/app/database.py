@@ -5,6 +5,11 @@ from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./app.db")
 
+# Render provisions Postgres connection strings with the legacy "postgres://"
+# scheme, but SQLAlchemy's psycopg2 dialect requires "postgresql://".
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
 engine = create_engine(
     DATABASE_URL,
     connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {},
